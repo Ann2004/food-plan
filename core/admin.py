@@ -1,3 +1,37 @@
 from django.contrib import admin
+from .models import Allergy, Ingredient, Recipe, RecipeIngredient
 
-# Register your models here.
+@admin.register(Allergy)
+class AllergyAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name')
+    search_fields = ('name',)
+
+@admin.register(Ingredient)
+class IngredientAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'calories_per_100g')
+    search_fields = ('name',)
+
+class RecipeIngredientInline(admin.TabularInline):
+    model = RecipeIngredient
+    extra = 1
+    autocomplete_fields = ['ingredient']
+
+@admin.register(Recipe)
+class RecipeAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'meal_type', 'suitable_for_diet', 'cooking_time')
+    list_filter = ('meal_type', 'suitable_for_diet', 'contains_allergies')
+    search_fields = ('name', 'description')
+    filter_horizontal = ('contains_allergies',)
+    inlines = [RecipeIngredientInline]
+    fieldsets = (
+        (None, {
+            'fields': ('name', 'description', 'image', 'cooking_time')
+        }),
+        ('Типы', {
+            'fields': ('meal_type', 'suitable_for_diet')
+        }),
+        ('Аллергены', {
+            'fields': ('contains_allergies',),
+            'description': 'Выберите все аллергены, которые содержит блюдо'
+        }),
+    )
