@@ -76,7 +76,7 @@ class RegistrationForm(forms.Form):
 
     def clean_email(self):
         email = self.cleaned_data.get("email")
-        if User.objects.filter(username=email).exists():
+        if User.objects.filter(email=email).exists():
             raise forms.ValidationError(
                 self.error_messages["email_exists"], code="email_exists"
             )
@@ -151,7 +151,7 @@ class ProfileForm(forms.Form):
         email = self.cleaned_data.get("email")
         if (
             email
-            and User.objects.exclude(pk=self.current_user.pk).filter(username=email).exists()
+            and User.objects.exclude(pk=self.current_user.pk).filter(email=email).exists()
         ):
             raise forms.ValidationError(
                 self.error_messages["email_exists"], code="email_exists"

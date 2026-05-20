@@ -4,7 +4,13 @@
 {% block title %}Личный кабинет | FoodPlan{% endblock %}
 
 {% block navbar_content %}
-<a href="{% url 'auth' %}" class="btn btn-outline-success shadow-none foodplan_green foodplan__border_green">Выйти</a>
+<form method="post" action="{% url 'logout' %}">
+    {% csrf_token %}
+    <button type="submit"
+            class="btn btn-outline-success shadow-none foodplan_green foodplan__border_green">
+        Выйти
+    </button>
+</form>
 {% endblock %}
 
 {% block content %}
@@ -27,7 +33,10 @@
                         <h3 class="card-title text-center">{{ request.user.first_name|default:request.user.username }}</h3>
                         <p class="text-center text-muted mb-2">{{ request.user.email }}</p>
                         <div class="d-block">
-                            <a href="{% url 'logout' %}" class="btn btn-outline-success shadow-none foodplan_green foodplan__border_green">Выйти</a>
+                            <form method="post" action="{% url 'logout' %}">
+                                {% csrf_token %}
+                                <button type="submit"class="btn btn-outline-success shadow-none foodplan_green foodplan__border_green">Выйти</button>
+                            </form>
                         </div>
                     </div>
 

@@ -1,6 +1,6 @@
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
-from django.contrib.auth import login, logout
+from django.contrib.auth import login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
 from django.urls import reverse
@@ -39,7 +39,9 @@ def registration(request):
 
 
 def logout_view(request):
-    logout(request)
+    if request.method == "POST":
+        logout(request)
+
     return redirect("home")
 
 
@@ -67,7 +69,8 @@ def personal_account(request):
         updated_user = profile_form.save()
         success_message = "Данные сохранены."
         if profile_form.cleaned_data.get("new_password"):
-            login(request, updated_user)
+            # login(request, updated_user)
+            update_session_auth_hash(request, updated_user)
 
     show_edit = request.method == "POST" and not profile_form.is_valid()
 
