@@ -6,6 +6,7 @@ from django.shortcuts import redirect, render
 from django.urls import reverse
 
 from .forms import LoginForm, ProfileForm, RegistrationForm
+from .models import Profile
 
 
 def home(request):
@@ -55,9 +56,11 @@ def add_query_params(url, params):
 
 @login_required
 def personal_account(request):
+    Profile.objects.get_or_create(user=request.user)
     success_message = ""
     profile_form = ProfileForm(
         request.POST or None,
+        request.FILES or None,
         user=request.user,
         initial={
             "first_name": request.user.first_name,

@@ -2,6 +2,8 @@ from django import forms
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 
+from .models import Profile
+
 
 class LoginForm(forms.Form):
     email = forms.EmailField(
@@ -137,6 +139,13 @@ class ProfileForm(forms.Form):
             }
         ),
     )
+    avatar = forms.ImageField(
+        label="Аватар",
+        required=False,
+        widget=forms.FileInput(
+            attrs={"class": "d-none", "id": "avatar-input", "accept": "image/*"}
+        ),
+    )
 
     error_messages = {
         "password_mismatch": "Пароли не совпадают.",
@@ -151,7 +160,9 @@ class ProfileForm(forms.Form):
         email = self.cleaned_data.get("email")
         if (
             email
-            and User.objects.exclude(pk=self.current_user.pk).filter(email=email).exists()
+            and User.objects.exclude(pk=self.current_user.pk)
+            .filter(email=email)
+            .exists()
         ):
             raise forms.ValidationError(
                 self.error_messages["email_exists"], code="email_exists"
@@ -179,4 +190,11 @@ class ProfileForm(forms.Form):
         if new_password:
             user.set_password(new_password)
         user.save()
+
+        avatar = self.cleaned_data.get("avatar")
+        if avatar:
+            profile, _ = Profile.objects.get_or_create(user=user)
+            profile.avatar = avatar
+            profile.save()
+
         return user

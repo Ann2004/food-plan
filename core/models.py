@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 
 class MealType(models.TextChoices):
@@ -86,3 +87,20 @@ class RecipeIngredient(models.Model):
 
     def __str__(self):
         return f"{self.ingredient.name} - {self.quantity_grams}г для '{self.recipe.name}'"
+
+
+class Profile(models.Model):
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name="profile",
+        verbose_name="Пользователь",
+    )
+    avatar = models.ImageField(
+        upload_to="avatars/",
+        blank=True,
+        null=True,
+    )
+
+    def __str__(self):
+        return self.user.email
