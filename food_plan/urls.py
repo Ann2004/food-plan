@@ -10,6 +10,7 @@ urlpatterns = (
         path("admin/", admin.site.urls),
         path("", views.home, name="home"),
         path("auth/", views.auth, name="auth"),
+        path("logout/", views.logout_view, name="logout"),
         path("registration/", views.registration, name="registration"),
         path("lk/", views.personal_account, name="lk"),
         path("recipe/1/", views.recipe_detail_1, name="recipe_1"),

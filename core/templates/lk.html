@@ -24,9 +24,10 @@
                             <span class="badge rounded-circle position-absolute bottom-0 end-0 foodplan__bg_green avatar__plus"><a href="#"
                                     class="link-dark text-decoration-none align-middle">+</a></span>
                         </div>
-                        <h3 class="card-title text-center">Tim</h3>
+                        <h3 class="card-title text-center">{{ request.user.first_name|default:request.user.username }}</h3>
+                        <p class="text-center text-muted mb-2">{{ request.user.email }}</p>
                         <div class="d-block">
-                            <a href="{% url 'auth' %}" class="btn btn-outline-success shadow-none foodplan_green foodplan__border_green">Выйти</a>
+                            <a href="{% url 'logout' %}" class="btn btn-outline-success shadow-none foodplan_green foodplan__border_green">Выйти</a>
                         </div>
                     </div>
 
@@ -42,36 +43,77 @@
                             </ul>
                             <div class="tab-content mt-2">
                                 <div class="tab-pane fade show active" id="data">
-                                    <form action="">
+                                    {% if success_message %}
+                                        <div class="alert alert-success">{{ success_message }}</div>
+                                    {% endif %}
+                                    {% if errors %}
+                                        <div class="alert alert-danger">{{ errors }}</div>
+                                    {% endif %}
+                                    <div id="profile-view" class="{% if show_edit %}d-none{% endif %}">
                                         <div class="mb-3">
                                             <div class="d-flex align-items-center justify-content-between">
-                                                <label for="name" class="form-label">Имя</label>
-                                                <small><a href="#" class="link-dark foodplan_green">изменить</a></small>
+                                                <p class="form-label mb-1">Имя</p>
+                                                <button id="edit-profile-button" type="button" class="btn btn-link p-0 link-dark foodplan_green">изменить</button>
                                             </div>
-                                        
-                                            <input type="text" class="form-control" id="name">
+                                            <p class="form-control-plaintext">{{ request.user.first_name|default:request.user.username }}</p>
                                         </div>
                                         <div class="mb-3">
-                                            <label for="email" class="form-label">Email</label>
-                                            <input type="email" class="form-control" id="email" aria-describedby="emailHelp">
+                                            <p class="form-label mb-1">Email</p>
+                                            <p class="form-control-plaintext">{{ request.user.email }}</p>
                                         </div>
-                                        <div class="mb-3">
-                                            <div class="d-flex align-items-center justify-content-between">
-                                                <label for="password" class="form-label">Пароль</label>
-                                                <small><a href="#" class="link-dark foodplan_green">изменить</a></small>
+                                    </div>
+                                    <div id="profile-edit" class="{% if not show_edit %}d-none{% endif %}">
+                                        <form method="post">
+                                            {% csrf_token %}
+                                            {% if form.non_field_errors %}
+                                                <div class="alert alert-danger">
+                                                    {% for error in form.non_field_errors %}
+                                                        {{ error }}
+                                                    {% endfor %}
+                                                </div>
+                                            {% endif %}
+                                            <div class="mb-3">
+                                                <label for="first_name" class="form-label">Имя</label>
+                                                <input type="text" name="first_name" class="form-control" id="first_name" value="{{ form.first_name.value|default_if_none:'' }}">
+                                                {% if form.first_name.errors %}
+                                                    <div class="text-danger small mt-1">
+                                                        {% for error in form.first_name.errors %}{{ error }}{% endfor %}
+                                                    </div>
+                                                {% endif %}
                                             </div>
-                                        
-                                            <input type="password" class="form-control" id="password">
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="password-confirm" class="form-label">Подтверждение пароля</label>
-                                            <input type="password" class="form-control" id="password-confirm">
-                                        </div>
-                                        <div class="d-block">
-                                            <button type="submit" class="btn shadow-none btn-outline-success foodplan_green foodplan__border_green">Сохранить
-                                                изменения</button>
-                                        </div>
-                                    </form>
+                                            <div class="mb-3">
+                                                <label for="email" class="form-label">Email</label>
+                                                <input type="email" name="email" class="form-control" id="email" aria-describedby="emailHelp" value="{{ form.email.value|default_if_none:'' }}">
+                                                {% if form.email.errors %}
+                                                    <div class="text-danger small mt-1">
+                                                        {% for error in form.email.errors %}{{ error }}{% endfor %}
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="password" class="form-label">Новый пароль</label>
+                                                <input type="password" name="new_password" class="form-control" id="password" placeholder="*******">
+                                                {% if form.new_password.errors %}
+                                                    <div class="text-danger small mt-1">
+                                                        {% for error in form.new_password.errors %}{{ error }}{% endfor %}
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="password-confirm" class="form-label">Подтверждение пароля</label>
+                                                <input type="password" name="confirm_password" class="form-control" id="password-confirm" placeholder="*******">
+                                                {% if form.confirm_password.errors %}
+                                                    <div class="text-danger small mt-1">
+                                                        {% for error in form.confirm_password.errors %}{{ error }}{% endfor %}
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                            <div class="d-flex gap-2">
+                                                <button type="submit" class="btn shadow-none btn-outline-success foodplan_green foodplan__border_green">Сохранить изменения</button>
+                                                <button id="cancel-edit-button" type="button" class="btn btn-outline-secondary">Отмена</button>
+                                            </div>
+                                        </form>
+                                    </div>
                                 </div>
                                 <div class="tab-pane fade" id="menu">
                                     <div class="row">
@@ -116,4 +158,5 @@
                 </div>
             </div>
         </section>
+        <script src="{% static 'js/lk-edit.js' %}"></script>
 {% endblock %}

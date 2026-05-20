@@ -19,6 +19,16 @@
                     <img src="{% static 'img/logo.8d8f24edbb5f.svg' %}" height="55" width="189" alt="FoodPlan Logo">
                 </a>
                 {% block navbar_content %}
+                {% if request.user.is_authenticated %}
+                <div class="collapse navbar-collapse" id="navbarCollapse">
+                    <ul class="navbar-nav w-100">
+                        <li class="nav-item align-items-center d-md-flex flex-grow-1 justify-content-end">
+                            <a href="{% url 'lk' %}" class="btn btn-outline-success me-2 shadow-none foodplan_green foodplan__border_green">Профиль</a>
+                            <a href="{% url 'logout' %}" class="btn btn-outline-success shadow-none foodplan_green foodplan__border_green">Выйти</a>
+                        </li>
+                    </ul>
+                </div>
+                {% else %}
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse"
                     aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -26,11 +36,12 @@
                 <div class="collapse navbar-collapse" id="navbarCollapse">
                     <ul class="navbar-nav w-100">
                         <li class="nav-item align-items-center d-md-flex flex-grow-1 justify-content-end">
-                            <a href="#" class="btn btn-outline-success me-2 shadow-none foodplan_green foodplan__border_green">Подписка</a>
+                            <a href="{% url 'order' %}" class="btn btn-outline-success me-2 shadow-none foodplan_green foodplan__border_green">Подписка</a>
                             <a href="{% url 'auth' %}" class="btn btn-outline-success shadow-none foodplan_green foodplan__border_green">Войти</a>
                         </li>
                     </ul>
                 </div>
+                {% endif %}
                 {% endblock %}
             </div>
         </nav>
