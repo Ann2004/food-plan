@@ -1,5 +1,3 @@
-from time import timezone
-
 from django.db import models
 from django.contrib.auth.models import User
 
@@ -135,10 +133,10 @@ class Subscription(models.Model):
         ACTIVE = "active", "Активна"
         EXPIRED = "expired", "Истекла"
 
-    user = models.OneToOneField(
+    user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name="subscription",
+        related_name="subscriptions",
         verbose_name="Пользователь",
     )
     diet_type = models.CharField(

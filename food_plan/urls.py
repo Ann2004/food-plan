@@ -1,8 +1,8 @@
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import path
 from django.contrib.auth import views as auth_views
+from django.urls import path
 
 from core import views
 
@@ -16,6 +16,11 @@ urlpatterns = (
         path("lk/", views.personal_account, name="lk"),
         path("recipe/<int:pk>/", views.recipe_detail, name="recipe_detail"),
         path("order/", views.order, name="order"),
+        path(
+            "subscription/<int:pk>/",
+            views.subscription_detail,
+            name="subscription_detail",
+        ),
         path(
             "password-reset/",
             auth_views.PasswordResetView.as_view(

@@ -183,47 +183,51 @@
                             </div>
                         </div>
                         <div class="tab-pane fade" id="menu">
-                            <div class="row">
-                                <div class="col-2">
-                                    <img src="{% static 'img/circle1.png' %}" alt="" class="w-100">
-                                </div>
-                                <div class="col-10 col-md-10">
-                                    <div class="row">
-                                        <div class="col-12">
-                                            <h2>Название подписки</h2>
-                                        </div>
-                                        <div class="col-md-12 col-lg-9">
-                                            <h6>
-                                                Описание подписки Lorem ipsum dolor sit,
-                                                amet consectetur adipisicing elit.
-                                                Eius saepe ea nobis necessitatibus
-                                                consectetur rem! Eligendi assumenda facere
-                                                sint quibusdam dolorem quasi doloribus nemo,
-                                                temporibus molestiae distinctio cum
-                                                laboriosam sed.
-                                            </h6>
-                                        </div>
-                                        <div class="col-md-12 col-lg-3 text-muted d-flex flex-column justify-content-between">
-                                            <div class="d-flex flex-row justify-content-between">
-                                                <small>Персоны:</small>
-                                                <small>3</small>
+                            {% if subscriptions %}
+                                {% for subscription in subscriptions %}
+                                    <div class="card border-0 foodplan__shadow mb-3 p-3">
+                                        <div class="row align-items-center">
+                                            <div class="col-12 col-md-8">
+                                                <div class="d-flex align-items-center gap-2 mb-1">
+                                                    <h5 class="mb-0">{{ subscription.get_diet_type_display }}</h5>
+                                                    {% if subscription.status == "active" %}
+                                                        <span class="badge foodplan__bg_green" style="font-size: 0.7rem;">Активна</span>
+                                                    {% else %}
+                                                        <span class="badge bg-secondary" style="font-size: 0.7rem;">Истекла</span>
+                                                    {% endif %}
+                                                </div>
+                                                <p class="text-muted mb-2" style="font-size: 0.85rem;">
+                                                    Действует до {{ subscription.end_date }}
+                                                    &bull;
+                                                    {{ subscription.get_period_display }}
+                                                </p>
+                                                <div class="d-flex flex-wrap gap-3 text-muted" style="font-size: 0.8rem;">
+                                                    <span>
+                                                        Персоны:
+                                                        <strong>{{ subscription.persons_count }}</strong>
+                                                    </span>
+                                                    <span>
+                                                        Калории:
+                                                        <strong>{{ subscription.calories_per_day }} ккал</strong>
+                                                    </span>
+                                                    <span>
+                                                        Приёмов пищи:
+                                                        <strong>{{ subscription.meals_count }}</strong>
+                                                    </span>
+                                                </div>
                                             </div>
-                                            <div class="d-flex flex-row justify-content-between">
-                                                <small>Аллергии:</small>
-                                                <small>нет</small>
-                                            </div>
-                                            <div class="d-flex flex-row justify-content-between">
-                                                <small>Калории:</small>
-                                                <small>1400</small>
-                                            </div>
-                                            <div class="d-flex flex-row justify-content-between">
-                                                <small>Кол-во приёмов пищи:</small>
-                                                <small>4</small>
+                                            <div class="col-12 col-md-4 d-flex justify-content-md-end mt-3 mt-md-0">
+                                                <a href="{% url 'subscription_detail' subscription.pk %}"
+                                                   class="btn btn-outline-success shadow-none foodplan_green foodplan__border_green">
+                                                    Открыть меню
+                                                </a>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-muted mt-2">У вас пока нет подписок.</p>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
