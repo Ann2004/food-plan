@@ -5,8 +5,10 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
 from django.urls import reverse
 
+from django.shortcuts import get_object_or_404
+
 from .forms import LoginForm, ProfileForm, RegistrationForm
-from .models import Profile
+from .models import Profile, Recipe
 
 
 def home(request):
@@ -88,16 +90,19 @@ def personal_account(request):
     )
 
 
-def recipe_detail_1(request):
-    return render(request, "card1.html")
-
-
-def recipe_detail_2(request):
-    return render(request, "card2.html")
-
-
-def recipe_detail_3(request):
-    return render(request, "card3.html")
+def recipe_detail(request, pk):
+    recipe = get_object_or_404(Recipe.objects.prefetch_related('ingredients__ingredient'), pk=pk)
+    recipe_ingredients = recipe.ingredients.all()
+    total_calories = sum(
+        ri.ingredient.calories_per_100g * ri.quantity_grams / 100
+        for ri in recipe_ingredients
+    )
+    context = {
+        "recipe": recipe,
+        "recipe_ingredients": recipe_ingredients,
+        "total_calories": int(total_calories),
+    }
+    return render(request, "card.html", context)
 
 
 def order(request):

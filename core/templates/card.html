@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Рецепт | FoodPlan{% endblock %}
+
+{% block navbar_content %}
+<a href="{% url 'home' %}" class="btn btn-outline-success me-2 shadow-none foodplan_green foodplan__border_green" role="button">Назад</a>
+{% endblock %}
+
+{% block content %}
+        <section>
+            <div class="container">
+                <div class="row">
+                    <div class="col-12 col-md-4 d-flex justify-content-center">
+                        <div class="card foodplan__card_borderless">
+                            {% if recipe.image %}
+                            <img src="{{ recipe.image.url }}" alt="{{ recipe.name }}">
+                            {% else %}
+                            <img src="{% static 'img/circle1.png' %}" alt="">
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-8 d-flex flex-column justify-content-between">
+                        <div class="row">
+                            <h2>{{ recipe.name }}</h2>
+                            <div class="col-12 col-sm-6">
+                                <h6>{{ recipe.description }}</h6>
+                            </div>
+                            <div class="col-12 col-sm-6">
+                                <small class="link-secondary">Ингредиенты:</small>
+                                <ul class="list-group list-group-flush">
+                                    {% for ri in recipe_ingredients %}
+                                    <li class="list-group-item disabled"><small>{{ ri.ingredient.name }} ({{ ri.quantity_grams }}г.)</small></li>
+                                    {% endfor %}
+                                </ul>
+                                <small class="link-secondary">Общая калорийность: {{ total_calories }} ккал</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+{% endblock %}
