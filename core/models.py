@@ -200,6 +200,10 @@ class Review(models.Model):
         null=True,
         verbose_name="Фото"
     )
+    is_moderated = models.BooleanField(
+        default=False,
+        verbose_name="Прошел модерацию"
+    )
     created_at = models.DateTimeField(
         auto_now_add=True,
         verbose_name="Дата создания"
