@@ -1,85 +1,107 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    {% block extra_css %}{% endblock %}
-    <title>{% block title %}FoodPlan - Меню на неделю{% endblock %}</title>
-</head>
-<body>
-    <header>
-        <nav class="navbar navbar-expand-md navbar-light fixed-top navbar__opacity">
-            <div class="container">
-                <a class="navbar-brand" href="/">
-                    <img src="{% static 'img/logo.8d8f24edbb5f.svg' %}" height="55" width="189" alt="FoodPlan Logo">
-                </a>
-                {% block navbar_content %}
-                {% if request.user.is_authenticated %}
-                <div class="collapse navbar-collapse" id="navbarCollapse">
-                    <ul class="navbar-nav w-100">
-                        <li class="nav-item align-items-center d-md-flex flex-grow-1 justify-content-end">
-                            <a href="{% url 'lk' %}" class="btn btn-outline-success me-2 shadow-none foodplan_green foodplan__border_green">Профиль</a>
-                            <form method="post" action="{% url 'logout' %}">
-                            {% csrf_token %}
-                                <button type="submit"class="btn btn-outline-success shadow-none foodplan_green foodplan__border_green">Выйти</button>
-                            </form>
-                        </li>
-                    </ul>
-                </div>
-                {% else %}
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse"
-                    aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="collapse navbar-collapse" id="navbarCollapse">
-                    <ul class="navbar-nav w-100">
-                        <li class="nav-item align-items-center d-md-flex flex-grow-1 justify-content-end">
-                            <a href="{% url 'order' %}" class="btn btn-outline-success me-2 shadow-none foodplan_green foodplan__border_green">Подписка</a>
-                            <a href="{% url 'auth' %}" class="btn btn-outline-success shadow-none foodplan_green foodplan__border_green">Войти</a>
-                        </li>
-                    </ul>
-                </div>
-                {% endif %}
-                {% endblock %}
-            </div>
-        </nav>
-    </header>
-
-    <main style="margin-top: calc(2rem + 85px);">
-        {% block content %}{% endblock %}
-    </main>
-
-    <footer>
-        <nav class="navbar navbar-expand-md navbar-light mt-5">
-            <div class="container p-2">
-                <a class="navbar-brand" href="{% url 'home' %}">
-                    <img src="{% static 'img/logo.8d8f24edbb5f.svg' %}" height="55" width="189" alt="FoodPlan Logo">
-                </a>
-                <div class="footer__sideBtns d-flex">
-                    <a href="#">
-                        <img src="{% static 'img/vk.png' %}" height="38" width="auto" alt="VK">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+              rel="stylesheet"
+              integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+              crossorigin="anonymous">
+        <link rel="stylesheet" href="{% static 'css/style.css' %}">
+        {% block extra_css %}{% endblock %}
+        <title>
+            {% block title %}
+                FoodPlan - Меню на неделю
+            {% endblock title %}
+        </title>
+    </head>
+    <body>
+        <header>
+            <nav class="navbar navbar-expand-md navbar-light fixed-top navbar__opacity">
+                <div class="container">
+                    <a class="navbar-brand" href="/">
+                        <img src="{% static 'img/logo.8d8f24edbb5f.svg' %}"
+                             height="55"
+                             width="189"
+                             alt="FoodPlan Logo">
                     </a>
+                    {% block navbar_content %}
+                        {% if request.user.is_authenticated %}
+                            <div class="collapse navbar-collapse" id="navbarCollapse">
+                                <ul class="navbar-nav w-100">
+                                    <li class="nav-item align-items-center d-md-flex flex-grow-1 justify-content-end">
+                                        <a href="{% url 'lk' %}"
+                                           class="btn btn-outline-success me-2 shadow-none foodplan_green foodplan__border_green">Профиль</a>
+                                        <form method="post" action="{% url 'logout' %}">
+                                            {% csrf_token %}
+                                            <button type="submit"
+                                                    class="btn btn-outline-success shadow-none foodplan_green foodplan__border_green">
+                                                Выйти
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+                        {% else %}
+                            <button class="navbar-toggler"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#navbarCollapse"
+                                    aria-controls="navbarCollapse"
+                                    aria-expanded="false"
+                                    aria-label="Toggle navigation">
+                                <span class="navbar-toggler-icon"></span>
+                            </button>
+                            <div class="collapse navbar-collapse" id="navbarCollapse">
+                                <ul class="navbar-nav w-100">
+                                    <li class="nav-item align-items-center d-md-flex flex-grow-1 justify-content-end">
+                                        <a href="{% url 'order' %}"
+                                           class="btn btn-outline-success me-2 shadow-none foodplan_green foodplan__border_green">Подписка</a>
+                                        <a href="{% url 'auth' %}"
+                                           class="btn btn-outline-success shadow-none foodplan_green foodplan__border_green">Войти</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        {% endif %}
+                    {% endblock navbar_content %}
                 </div>
+            </nav>
+        </header>
+        <main style="margin-top: calc(2rem + 85px);">
+            {% block content %}
+            {% endblock content %}
+        </main>
+        <footer>
+            <nav class="navbar navbar-expand-md navbar-light mt-5">
+                <div class="container p-2">
+                    <a class="navbar-brand" href="{% url 'home' %}">
+                        <img src="{% static 'img/logo.8d8f24edbb5f.svg' %}"
+                             height="55"
+                             width="189"
+                             alt="FoodPlan Logo">
+                    </a>
+                    <div class="footer__sideBtns d-flex">
+                        <a href="#">
+                            <img src="{% static 'img/vk.png' %}" height="38" width="auto" alt="VK">
+                        </a>
+                    </div>
+                </div>
+            </nav>
+        </footer>
+        <footer class="footer pt-2" style="border-top: 1px solid lightgray;">
+            <div class="container d-flex flex-row justify-content-center mb-2">
+                <small class="text-center">
+                    <h6>© Девман2022. Все права защищены. © Devman2022. All right reserved.</h6>
+                    <a href="#" class="link-secondary">Политика конфиденциальности</a>
+                </small>
             </div>
-        </nav>
-    </footer>
-    <footer class="footer pt-2" style="border-top: 1px solid lightgray;">
-        <div class="container d-flex flex-row justify-content-center mb-2">
-            <small class="text-center">
-                <h6>© Девман2022. Все права защищены. © Devman2022. All right reserved.</h6>
-                <a href="#" class="link-secondary">Политика конфиденциальности</a>
-            </small>
-        </div>
-    </footer>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
-        crossorigin="anonymous"></script>
-    {% block extra_js %}{% endblock %}
-</body>
+        </footer>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+                integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+                crossorigin="anonymous"></script>
+        {% block extra_js %}
+        {% endblock extra_js %}
+    </body>
 </html>
