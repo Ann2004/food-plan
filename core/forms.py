@@ -3,7 +3,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 
-from .models import Profile
+from .models import Profile, Review
 
 
 class LoginForm(forms.Form):
@@ -302,3 +302,30 @@ class ProfileForm(forms.Form):
             profile.save()
 
         return user
+
+
+class ReviewForm(forms.ModelForm):
+    rating = forms.ChoiceField(
+        choices=[(i, str(i)) for i in range(1, 6)],
+        widget=forms.RadioSelect(attrs={'class': 'rating-input'}),
+        label="Ваша оценка"
+    )
+    
+    class Meta:
+        model = Review
+        fields = ['rating', 'text', 'image']
+        widgets = {
+            'text': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 5,
+                'placeholder': 'Поделитесь вашим впечатлением о сервисе FoodPlan...'
+            }),
+            'image': forms.FileInput(attrs={
+                'class': 'form-control',
+                'accept': 'image/*'
+            })
+        }
+        labels = {
+            'text': 'Текст отзыва',
+            'image': 'Фото'
+        }

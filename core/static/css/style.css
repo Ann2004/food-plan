@@ -234,6 +234,16 @@ body {
     position: relative;
 }
 
+.foodplan__review-btn {
+    transition: all 0.3s ease;
+}
+
+.foodplan__review-btn:hover {
+    background-color: #91B93E;
+    color: white !important;
+    border-color: #91B93E;
+}
+
 @media (min-width: 768px) {
     .nav-item__border:hover:before {
         content: "";

@@ -2,11 +2,12 @@ from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 from django.contrib.auth import login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 
-from .forms import LoginForm, ProfileForm, RegistrationForm
+from .forms import LoginForm, ProfileForm, RegistrationForm, ReviewForm
 from .models import Profile, Recipe, Subscription
 
 
@@ -181,3 +182,19 @@ def order(request):
         return redirect(redirect_url)
 
     return render(request, "order.html")
+
+
+@login_required
+def create_review(request):
+    if request.method == 'POST':
+        form = ReviewForm(request.POST, request.FILES)
+        if form.is_valid():
+            review = form.save(commit=False)
+            review.user = request.user
+            review.save()
+            messages.success(request, 'Спасибо за ваш отзыв!')
+            return redirect('lk')
+    else:
+        form = ReviewForm()
+    
+    return render(request, 'review.html', {'form': form})

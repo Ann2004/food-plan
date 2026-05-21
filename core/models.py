@@ -180,3 +180,39 @@ class Subscription(models.Model):
 
     def __str__(self):
         return f"{self.user.username} — {self.get_diet_type_display()}"
+
+
+class Review(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='reviews',
+        verbose_name="Пользователь"
+    )
+    rating = models.PositiveSmallIntegerField(
+        choices=[(i, str(i)) for i in range(1, 6)],
+        verbose_name="Оценка"
+    )
+    text = models.TextField(verbose_name="Текст отзыва")
+    image = models.ImageField(
+        upload_to='reviews/',
+        blank=True,
+        null=True,
+        verbose_name="Фото"
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Дата создания"
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name="Дата обновления"
+    )
+    
+    class Meta:
+        verbose_name = "Отзыв"
+        verbose_name_plural = "Отзывы"
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"Отзыв от {self.user.username} - {self.rating}★"

@@ -49,6 +49,7 @@ urlpatterns = (
             ),
             name="password_reset_complete",
         ),
+        path('review/create/', views.create_review, name='create_review'),
     ]
     + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

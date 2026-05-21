@@ -1,0 +1,192 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+    Отзыв | FoodPlan
+{% endblock title %}
+
+{% block content %}
+    <section>
+        <div class="container">
+            <div class="row">
+                <div class="card col-12 p-3 mb-5 foodplan__shadow">
+                    <h4 class="foodplan__backButton">
+                        <strong>
+                            <small>
+                                <a href="{% url 'lk' %}" class="link-secondary fw-light">Назад</a>
+                            </small>
+                        </strong>
+                    </h4>
+                    <h2 class="text-center">
+                        <strong>Оставьте отзыв</strong>
+                    </h2>
+                </div>
+            </div>
+            
+            <div class="row justify-content-center">
+                <div class="col-md-8 col-lg-6">
+                    <div class="card p-4 foodplan__shadow">
+                        <form method="POST" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            
+                            <div class="mb-4">
+                                <label class="form-label fw-bold mb-3">Ваша оценка</label>
+                                <div class="rating-stars">
+                                    <input type="hidden" name="rating" id="rating-value" required>
+                                    <div class="stars">
+                                        <span class="star" data-value="1">★</span>
+                                        <span class="star" data-value="2">★</span>
+                                        <span class="star" data-value="3">★</span>
+                                        <span class="star" data-value="4">★</span>
+                                        <span class="star" data-value="5">★</span>
+                                    </div>
+                                </div>
+                                <div id="rating-error" class="text-danger small mt-1" style="display: none;">Пожалуйста, выберите оценку</div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">{{ form.text.label }}</label>
+                                {{ form.text }}
+                                {% if form.text.errors %}
+                                    <div class="text-danger small mt-1">{{ form.text.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">{{ form.image.label }}</label>
+                                {{ form.image }}
+                                <small class="text-muted d-block mt-1">Поддерживаемые форматы: JPG, PNG. Максимальный размер: 5MB</small>
+                                {% if form.image.errors %}
+                                    <div class="text-danger small mt-1">{{ form.image.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-4" id="imagePreviewContainer" style="display: none;">
+                                <img id="imagePreview" src="#" alt="Предпросмотр" class="img-fluid rounded" style="max-height: 200px;">
+                            </div>
+                            
+                            <div class="d-flex justify-content-between gap-3">
+                                <a href="{% url 'lk' %}" class="btn btn-outline-secondary flex-grow-1">Отмена</a>
+                                <button type="submit" class="btn btn-success flex-grow-1">Отправить отзыв</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <style>
+        .stars {
+            display: flex;
+            flex-direction: row;
+            gap: 10px;
+        }
+        
+        .star {
+            font-size: 2.5rem;
+            cursor: pointer;
+            color: #ddd;
+            transition: color 0.2s ease;
+            user-select: none;
+        }
+        
+        .star:hover,
+        .star.active {
+            color: #ffc107;
+        }
+        
+        .star:hover ~ .star {
+            color: #ddd;
+        }
+        
+        .stars .star.active {
+            color: #ffc107;
+        }
+    </style>
+    
+    <script>
+        const stars = document.querySelectorAll('.star');
+        const ratingInput = document.getElementById('rating-value');
+        const ratingError = document.getElementById('rating-error');
+        let currentRating = 0;
+        
+        function setRating(value) {
+            currentRating = value;
+            ratingInput.value = value;
+            
+            stars.forEach(star => {
+                const starValue = parseInt(star.getAttribute('data-value'));
+                if (starValue <= value) {
+                    star.classList.add('active');
+                } else {
+                    star.classList.remove('active');
+                }
+            });
+            
+            if (ratingError.style.display === 'block') {
+                ratingError.style.display = 'none';
+            }
+        }
+        
+        stars.forEach(star => {
+            star.addEventListener('click', function() {
+                const value = parseInt(this.getAttribute('data-value'));
+                setRating(value);
+            });
+            
+            star.addEventListener('mouseenter', function() {
+                const value = parseInt(this.getAttribute('data-value'));
+                stars.forEach(s => {
+                    const starValue = parseInt(s.getAttribute('data-value'));
+                    if (starValue <= value) {
+                        s.style.color = '#ffc107';
+                    } else {
+                        s.style.color = '#ddd';
+                    }
+                });
+            });
+        });
+        
+        document.querySelector('.stars').addEventListener('mouseleave', function() {
+            stars.forEach(star => {
+                const starValue = parseInt(star.getAttribute('data-value'));
+                if (starValue <= currentRating) {
+                    star.style.color = '#ffc107';
+                } else {
+                    star.style.color = '#ddd';
+                }
+            });
+        });
+        
+        document.querySelector('form').addEventListener('submit', function(e) {
+            if (!ratingInput.value || ratingInput.value === '0') {
+                e.preventDefault();
+                ratingError.style.display = 'block';
+                ratingError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return false;
+            }
+        });
+        
+        const fileInput = document.querySelector('input[type="file"]');
+        if (fileInput) {
+            fileInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                const previewContainer = document.getElementById('imagePreviewContainer');
+                const previewImage = document.getElementById('imagePreview');
+                
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        previewImage.src = event.target.result;
+                        previewContainer.style.display = 'block';
+                    }
+                    reader.readAsDataURL(file);
+                } else {
+                    previewContainer.style.display = 'none';
+                    previewImage.src = '#';
+                }
+            });
+        }
+    </script>
+{% endblock content %}
