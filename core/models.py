@@ -3,11 +3,16 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 
 
-class MealType(models.TextChoices):
-    BREAKFAST = "breakfast", "Завтрак"
-    LUNCH = "lunch", "Обед"
-    DINNER = "dinner", "Ужин"
-    DESSERT = "dessert", "Десерт"
+class MealType(models.Model):
+    code = models.CharField(max_length=20, unique=True, verbose_name="Код")
+    name = models.CharField(max_length=100, verbose_name="Название")
+
+    class Meta:
+        verbose_name = "Тип приёма пищи"
+        verbose_name_plural = "Типы приёмов пищи"
+
+    def __str__(self):
+        return self.name
 
 
 class DietType(models.TextChoices):
@@ -59,8 +64,11 @@ class Recipe(models.Model):
     image = models.ImageField(
         upload_to="recipes/", blank=True, null=True, verbose_name="Изображение"
     )
-    meal_type = models.CharField(
-        max_length=20, choices=MealType.choices, verbose_name="Тип приема пищи"
+    meal_type = models.ForeignKey(
+        MealType,
+        on_delete=models.PROTECT,
+        related_name="recipes",
+        verbose_name="Тип приема пищи",
     )
     suitable_for_diet = models.CharField(
         max_length=20,
@@ -80,7 +88,7 @@ class Recipe(models.Model):
         verbose_name_plural = "Рецепты"
 
     def __str__(self):
-        return f"{self.name} ({self.meal_type})"
+        return f"{self.name} ({self.meal_type.name})"
 
 
 class RecipeIngredient(models.Model):
@@ -124,6 +132,15 @@ class Profile(models.Model):
         blank=True,
         null=True,
     )
+    allergies = models.ManyToManyField(
+        Allergy,
+        blank=True,
+        verbose_name="Аллергии",
+    )
+    calories_per_day = models.PositiveIntegerField(
+        default=2000,
+        verbose_name="Калорий в день",
+    )
 
     def __str__(self):
         return self.user.email
@@ -131,6 +148,9 @@ class Profile(models.Model):
 
 class Subscription(models.Model):
     class Status(models.TextChoices):
+        NEW = "new", "Новая"
+        PAID = "paid", "Оплачена"
+        CANCELLED = "cancelled", "Отменена"
         ACTIVE = "active", "Активна"
         EXPIRED = "expired", "Истекла"
 
@@ -153,25 +173,37 @@ class Subscription(models.Model):
         default=1,
         verbose_name="Количество персон",
     )
-    allergies = models.ManyToManyField(
-        Allergy,
+    meals = models.ManyToManyField(
+        MealType,
         blank=True,
-        verbose_name="Аллергии",
+        verbose_name="Приёмы пищи",
     )
-    calories_per_day = models.PositiveIntegerField(
-        default=2000,
-        verbose_name="Калорий в день",
+    price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0,
+        verbose_name="Цена",
     )
-    meals_count = models.PositiveSmallIntegerField(
-        default=3,
-        verbose_name="Количество приёмов пищи",
+    payment_id = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        verbose_name="ID платежа",
     )
-    start_date = models.DateField(auto_now_add=True, verbose_name="Дата начала")
-    end_date = models.DateField(verbose_name="Дата окончания")
+    start_date = models.DateField(
+        blank=True,
+        null=True,
+        verbose_name="Дата начала",
+    )
+    end_date = models.DateField(
+        blank=True,
+        null=True,
+        verbose_name="Дата окончания",
+    )
     status = models.CharField(
         max_length=20,
         choices=Status.choices,
-        default=Status.ACTIVE,
+        default=Status.NEW,
         verbose_name="Статус",
     )
 
