@@ -3,7 +3,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 
-from .models import Profile, Review
+from .models import DietType, MealType, Profile, SubscriptionPeriod, Review
 
 
 class LoginForm(forms.Form):
@@ -329,3 +329,18 @@ class ReviewForm(forms.ModelForm):
             'text': 'Текст отзыва',
             'image': 'Фото'
         }
+
+
+class SubscriptionForm(forms.Form):
+    diet_type = forms.ChoiceField(
+        choices=DietType.choices,
+        widget=forms.RadioSelect(attrs={"class": "foodplan_selected d-none"}),
+    )
+    period = forms.ChoiceField(
+        choices=[(p.value, p.label) for p in SubscriptionPeriod],
+        widget=forms.Select(attrs={"class": "form-select"}),
+    )
+    persons_count = forms.ChoiceField(
+        choices=[(i, str(i)) for i in range(1, 7)],
+        widget=forms.Select(attrs={"class": "form-select"}),
+    )

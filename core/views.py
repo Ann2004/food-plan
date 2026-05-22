@@ -1,3 +1,5 @@
+import calendar
+from datetime import date
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 from django.contrib.auth import login, logout, update_session_auth_hash
@@ -7,8 +9,8 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 
-from .forms import LoginForm, ProfileForm, RegistrationForm, ReviewForm
-from .models import Profile, Recipe, Subscription, PromoCode
+from .forms import LoginForm, ProfileForm, RegistrationForm, ReviewForm, SubscriptionForm
+from .models import Allergy, MealType, Profile, Recipe, Subscription, PromoCode, calculate_price
 
 
 def home(request):
@@ -131,13 +133,16 @@ def recipe_detail(request, pk):
 def subscription_detail(request, pk):
 
     subscription = get_object_or_404(
-        Subscription.objects.prefetch_related("allergies"),
+        Subscription.objects.prefetch_related("meals"),
         pk=pk,
         user=request.user,
     )
 
+    Profile.objects.get_or_create(user=request.user)
+
     if (
         subscription.status == "active"
+        and subscription.end_date
         and subscription.end_date < timezone.now().date()
     ):
         subscription.status = "expired"
@@ -145,42 +150,27 @@ def subscription_detail(request, pk):
 
     recipes = Recipe.objects.filter(suitable_for_diet=subscription.diet_type)
 
-    breakfast_recipes = None
-    lunch_recipes = None
-    dinner_recipes = None
-    dessert_recipes = None
-
-    meals_count = subscription.meals_count
-
-    if meals_count >= 1:
-        breakfast_recipes = recipes.filter(meal_type="breakfast")
-
-    if meals_count >= 2:
-        lunch_recipes = recipes.filter(meal_type="lunch")
-
-    if meals_count >= 3:
-        dinner_recipes = recipes.filter(meal_type="dinner")
-
-    if meals_count >= 4:
-        dessert_recipes = recipes.filter(meal_type="dessert")
+    meal_recipes_list = [
+        (meal, recipes.filter(meal_type=meal))
+        for meal in subscription.meals.all()
+    ]
 
     context = {
         "subscription": subscription,
-        "breakfast_recipes": breakfast_recipes,
-        "lunch_recipes": lunch_recipes,
-        "dinner_recipes": dinner_recipes,
-        "dessert_recipes": dessert_recipes,
+        "meal_recipes_list": meal_recipes_list,
     }
 
     return render(request, "subscription.html", context)
 
 
 def order(request):
+    allergies = Allergy.objects.all()
+    meal_types = MealType.objects.all()
 
     if request.method == "POST":
         promo_code = request.POST.get("promo_code")
 
-        if promo_code:
+        if promo_code and not request.POST.get("diet_type"):
             promo = PromoCode.objects.filter(
                 code__iexact=promo_code,
             ).first()
@@ -188,12 +178,66 @@ def order(request):
             if not promo or not promo.is_valid:
                 messages.error(request, "Промокод недействителен")
 
-        elif not request.user.is_authenticated:
+            form = SubscriptionForm()
+            context = {
+                "form": form,
+                "allergies": allergies,
+                "meal_types": meal_types,
+                "price": 0,
+            }
+            return render(request, "order.html", context)
+
+        if not request.user.is_authenticated:
             login_url = reverse("auth")
             redirect_url = add_query_params(login_url, {"next": request.path})
             return redirect(redirect_url)
 
-    return render(request, "order.html")
+        form = SubscriptionForm(request.POST)
+        if form.is_valid():
+            selected_meals = [
+                pk for pk in request.POST.getlist("meals") if pk
+            ]
+            meals_count = len(selected_meals)
+
+            start = timezone.now().date()
+            month = start.month - 1 + int(form.cleaned_data["period"])
+            year = start.year + month // 12
+            month = month % 12 + 1
+            day = min(start.day, calendar.monthrange(year, month)[1])
+            end = date(year, month, day)
+
+            subscription = Subscription.objects.create(
+                user=request.user,
+                diet_type=form.cleaned_data["diet_type"],
+                period=int(form.cleaned_data["period"]),
+                persons_count=int(form.cleaned_data["persons_count"]),
+                price=calculate_price(
+                    int(form.cleaned_data["persons_count"]),
+                    meals_count,
+                ),
+                start_date=start,
+                end_date=end,
+            )
+            if selected_meals:
+                subscription.meals.set(selected_meals)
+
+            selected_allergies = request.POST.getlist("allergies")
+            if selected_allergies:
+                profile, _ = Profile.objects.get_or_create(user=request.user)
+                profile.allergies.set(selected_allergies)
+
+            return redirect("lk")
+    else:
+        form = SubscriptionForm()
+
+    context = {
+        "form": form,
+        "allergies": allergies,
+        "meal_types": meal_types,
+        "price": 0,
+    }
+
+    return render(request, "order.html", context)
 
 
 @login_required

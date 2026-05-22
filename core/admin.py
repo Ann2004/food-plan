@@ -3,6 +3,7 @@ from django.contrib import admin
 from .models import (
     Allergy,
     Ingredient,
+    Profile,
     Recipe,
     RecipeIngredient,
     Subscription,
@@ -21,6 +22,12 @@ class AllergyAdmin(admin.ModelAdmin):
 class IngredientAdmin(admin.ModelAdmin):
     list_display = ("id", "name", "calories_per_100g")
     search_fields = ("name",)
+
+
+@admin.register(Profile)
+class ProfileAdmin(admin.ModelAdmin):
+    list_display = ("id", "user", "calories_per_day")
+    filter_horizontal = ("allergies",)
 
 
 class RecipeIngredientInline(admin.TabularInline):
@@ -57,15 +64,14 @@ class SubscriptionAdmin(admin.ModelAdmin):
         "diet_type",
         "period",
         "persons_count",
-        "calories_per_day",
-        "meals_count",
+        "price",
         "start_date",
         "end_date",
         "status",
     )
     list_filter = ("diet_type", "status", "period")
     search_fields = ("user__username", "user__email")
-    filter_horizontal = ("allergies",)
+    filter_horizontal = ("meals",)
     fieldsets = (
         (None, {"fields": ("user", "status")}),
         (
@@ -74,13 +80,12 @@ class SubscriptionAdmin(admin.ModelAdmin):
                 "fields": (
                     "diet_type",
                     "persons_count",
-                    "calories_per_day",
-                    "meals_count",
-                    "allergies",
+                    "meals",
                 )
             },
         ),
-        ("Период", {"fields": ("period", "end_date")}),
+        ("Оплата", {"fields": ("price", "payment_id")}),
+        ("Период", {"fields": ("period", "start_date", "end_date")}),
     )
 
 
