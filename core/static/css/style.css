@@ -177,32 +177,6 @@ body {
   width: auto;
 }
 
-@media (max-width: 576px) {
-  .carousel__button_prev {
-    left: -24px;
-  }
-  .carousel__button_next {
-    right: -24px;
-  }
-}
-
-@media (min-width: 577px) {
-  .carousel__button_prev {
-    left: -36px;
-  }
-  .carousel__svg_prev {
-      width: 32px;
-      height: 32px;
-  }
-  .carousel__button_next {
-    right: -36px;
-  }
-  .carousel__svg_next {
-      width: 32px;
-      height: 32px;
-  }
-}
-
 .foodplan__tab-item {
   border-bottom: #91B93E solid 1px;
 }
@@ -244,6 +218,186 @@ body {
     border-color: #91B93E;
 }
 
+.stars {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+}
+
+.star {
+    font-size: 2.5rem;
+    cursor: pointer;
+    color: #ddd;
+    transition: color 0.2s ease;
+    user-select: none;
+}
+
+.star:hover,
+.star.active {
+    color: #ffc107;
+}
+
+.star:hover ~ .star {
+    color: #ddd;
+}
+
+.stars .star.active {
+    color: #ffc107;
+}
+
+.reviews-wrapper {
+    position: relative;
+    padding: 20px 0;
+}
+
+.reviews-scroll-container {
+    overflow-x: hidden;
+    position: relative;
+}
+
+.reviews-scroll {
+    display: flex;
+    gap: 24px;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+    padding: 10px 5px 20px 5px;
+}
+
+.reviews-scroll::-webkit-scrollbar {
+    height: 8px;
+}
+
+.reviews-scroll::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.reviews-scroll::-webkit-scrollbar-thumb {
+    background: #91B93E;
+    border-radius: 10px;
+}
+
+.reviews-scroll::-webkit-scrollbar-thumb:hover {
+    background: #7a9e32;
+}
+
+.review-card-wrapper {
+    flex: 0 0 300px;
+    min-width: 300px;
+}
+
+.review-card {
+    width: 100%;
+    height: 450px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.review-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+}
+
+.review-image-container {
+    width: 100%;
+    height: 200px;
+    overflow: hidden;
+    background-color: #f5f5f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.review-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.review-author {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: #333;
+}
+
+.review-rating {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+}
+
+.star {
+    font-size: 1.25rem;
+    line-height: 1;
+}
+
+.star-filled {
+    color: #FFD700;
+}
+
+.star-empty {
+    color: #ddd;
+}
+
+.review-text {
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: #666;
+    overflow-y: auto;
+    max-height: 150px;
+    padding-right: 5px;
+}
+
+.review-text::-webkit-scrollbar {
+    width: 4px;
+}
+
+.review-text::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.review-text::-webkit-scrollbar-thumb {
+    background: #91B93E;
+    border-radius: 10px;
+}
+
+.scroll-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: white;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    z-index: 10;
+    color: #91B93E;
+}
+
+.scroll-btn:hover {
+    background: #91B93E;
+    color: white;
+    box-shadow: 0 4px 15px rgba(145, 185, 62, 0.3);
+}
+
+.scroll-btn-left {
+    left: -20px;
+}
+
+.scroll-btn-right {
+    right: -20px;
+}
+
 @media (min-width: 768px) {
     .nav-item__border:hover:before {
         content: "";
@@ -254,4 +408,30 @@ body {
         color: #91B93E;
         background-color: #91B93E;
     }
+}
+
+@media (max-width: 576px) {
+  .carousel__button_prev {
+    left: -24px;
+  }
+  .carousel__button_next {
+    right: -24px;
+  }
+}
+
+@media (min-width: 577px) {
+  .carousel__button_prev {
+    left: -36px;
+  }
+  .carousel__svg_prev {
+      width: 32px;
+      height: 32px;
+  }
+  .carousel__button_next {
+    right: -36px;
+  }
+  .carousel__svg_next {
+      width: 32px;
+      height: 32px;
+  }
 }

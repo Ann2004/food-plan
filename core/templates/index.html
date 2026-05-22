@@ -203,23 +203,61 @@
     </section>
     <section>
         <div class="container mb-5">
-            <h1 class="mb-3 text-center">
-                <strong>Истории наших пользователей</strong>
+            <h1 class="mb-4 text-center">
+                <strong>Отзывы наших пользователей</strong>
             </h1>
-            <div class="row">
-                <div class="card col-12 col-sm-6 col-lg-3 foodplan__card_borderless">
-                    <img src="{% static 'img/IMG_1899.jpg' %}" alt="" class="foodplan__story">
+            
+            {% if reviews %}
+            <div class="reviews-wrapper">
+                <div class="reviews-scroll-container">
+                    <div class="reviews-scroll">
+                        {% for review in reviews %}
+                        <div class="review-card-wrapper">
+                            <div class="card foodplan__card_borderless foodplan__shadow review-card">
+                                <div class="review-image-container">
+                                    {% if review.image %}
+                                        <img src="{{ review.image.url }}" class="review-image" alt="Фото пользователя">
+                                    {% else %}
+                                        <img src="{% static 'img/circle1.png' %}" class="review-image" alt="Аватар по умолчанию">
+                                    {% endif %}
+                                </div>
+                                <div class="card-body text-center">
+                                    <h5 class="review-author">{{ review.user.username }}</h5>
+                                    <div class="review-rating mb-3">
+                                        {% for i in "12345"|make_list %}
+                                            {% if forloop.counter <= review.rating %}
+                                                <span class="star star-filled">★</span>
+                                            {% else %}
+                                                <span class="star star-empty">☆</span>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                    <p class="review-text">{{ review.text }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
                 </div>
-                <div class="card col-12 col-sm-6 col-lg-3 foodplan__card_borderless">
-                    <img src="{% static 'img/IMG_1900.jpg' %}" alt="" class="foodplan__story">
-                </div>
-                <div class="card col-12 col-sm-6 col-lg-3 foodplan__card_borderless">
-                    <img src="{% static 'img/IMG_1901.jpg' %}" alt="" class="foodplan__story">
-                </div>
-                <div class="card col-12 col-sm-6 col-lg-3 foodplan__card_borderless">
-                    <img src="{% static 'img/IMG_1902.jpg' %}" alt="" class="foodplan__story">
-                </div>
+                
+                {% if reviews|length > 4 %}
+                <button class="scroll-btn scroll-btn-left" onclick="scrollReviews(-1)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-chevron-left" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z"/>
+                    </svg>
+                </button>
+                <button class="scroll-btn scroll-btn-right" onclick="scrollReviews(1)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-chevron-right" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z"/>
+                    </svg>
+                </button>
+                {% endif %}
             </div>
+            {% else %}
+            <div class="text-center">
+                <p>Пока нет отзывов. Будьте первым!</p>
+            </div>
+            {% endif %}
         </div>
     </section>
     <section>
@@ -258,4 +296,15 @@
             </div>
         </div>
     </section>
+
+    <script>
+    function scrollReviews(direction) {
+        const container = document.querySelector('.reviews-scroll');
+        const scrollAmount = 380;
+        container.scrollBy({
+            left: direction * scrollAmount,
+            behavior: 'smooth'
+        });
+    }
+    </script>
 {% endblock content %}

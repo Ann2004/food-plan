@@ -10,11 +10,16 @@ from django.urls import reverse
 from django.utils import timezone
 
 from .forms import LoginForm, ProfileForm, RegistrationForm, ReviewForm, SubscriptionForm
-from .models import Allergy, MealType, Profile, Recipe, Subscription, PromoCode, calculate_price
+from .models import Allergy, MealType, Profile, Recipe, Subscription, PromoCode, Review, calculate_price
 
 
 def home(request):
-    return render(request, "index.html")
+    reviews = Review.objects.filter(is_moderated=True).select_related("user").order_by("-created_at")
+    
+    context = {
+        "reviews": reviews,
+    }
+    return render(request, "index.html", context)
 
 
 def auth(request):

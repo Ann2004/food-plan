@@ -76,35 +76,6 @@
         </div>
     </section>
     
-    <style>
-        .stars {
-            display: flex;
-            flex-direction: row;
-            gap: 10px;
-        }
-        
-        .star {
-            font-size: 2.5rem;
-            cursor: pointer;
-            color: #ddd;
-            transition: color 0.2s ease;
-            user-select: none;
-        }
-        
-        .star:hover,
-        .star.active {
-            color: #ffc107;
-        }
-        
-        .star:hover ~ .star {
-            color: #ddd;
-        }
-        
-        .stars .star.active {
-            color: #ffc107;
-        }
-    </style>
-    
     <script>
         const stars = document.querySelectorAll('.star');
         const ratingInput = document.getElementById('rating-value');
