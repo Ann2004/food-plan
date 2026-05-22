@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
 
 
 class MealType(models.TextChoices):
@@ -186,37 +187,45 @@ class Review(models.Model):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='reviews',
-        verbose_name="Пользователь"
+        related_name="reviews",
+        verbose_name="Пользователь",
     )
     rating = models.PositiveSmallIntegerField(
-        choices=[(i, str(i)) for i in range(1, 6)],
-        verbose_name="Оценка"
+        choices=[(i, str(i)) for i in range(1, 6)], verbose_name="Оценка"
     )
     text = models.TextField(verbose_name="Текст отзыва")
     image = models.ImageField(
-        upload_to='reviews/',
-        blank=True,
-        null=True,
-        verbose_name="Фото"
+        upload_to="reviews/", blank=True, null=True, verbose_name="Фото"
     )
-    is_moderated = models.BooleanField(
-        default=False,
-        verbose_name="Прошел модерацию"
-    )
-    created_at = models.DateTimeField(
-        auto_now_add=True,
-        verbose_name="Дата создания"
-    )
-    updated_at = models.DateTimeField(
-        auto_now=True,
-        verbose_name="Дата обновления"
-    )
-    
+    is_moderated = models.BooleanField(default=False, verbose_name="Прошел модерацию")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
+
     class Meta:
         verbose_name = "Отзыв"
         verbose_name_plural = "Отзывы"
-        ordering = ['-created_at']
-    
+        ordering = ["-created_at"]
+
     def __str__(self):
         return f"Отзыв от {self.user.username} - {self.rating}★"
+
+
+class PromoCode(models.Model):
+    code = models.CharField(max_length=50, unique=True, verbose_name="Промокод")
+    discount_percent = models.PositiveSmallIntegerField(verbose_name="Скидка (%)")
+    active = models.BooleanField(default=True, verbose_name="Активен")
+    valid_from = models.DateTimeField(verbose_name="Действует с")
+    valid_to = models.DateTimeField(verbose_name="Действует до")
+
+    class Meta:
+        verbose_name = "Промокод"
+        verbose_name_plural = "Промокоды"
+
+    def __str__(self):
+        return f"{self.code} ({self.discount_percent}%)"
+
+    @property
+    def is_valid(self):
+        now = timezone.now()
+
+        return self.active and self.valid_from <= now <= self.valid_to

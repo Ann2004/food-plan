@@ -8,7 +8,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from .forms import LoginForm, ProfileForm, RegistrationForm, ReviewForm
-from .models import Profile, Recipe, Subscription
+from .models import Profile, Recipe, Subscription, PromoCode
 
 
 def home(request):
@@ -176,25 +176,37 @@ def subscription_detail(request, pk):
 
 
 def order(request):
-    if request.method == "POST" and not request.user.is_authenticated:
-        login_url = reverse("auth")
-        redirect_url = add_query_params(login_url, {"next": request.path})
-        return redirect(redirect_url)
+
+    if request.method == "POST":
+        promo_code = request.POST.get("promo_code")
+
+        if promo_code:
+            promo = PromoCode.objects.filter(
+                code__iexact=promo_code,
+            ).first()
+
+            if not promo or not promo.is_valid:
+                messages.error(request, "Промокод недействителен")
+
+        elif not request.user.is_authenticated:
+            login_url = reverse("auth")
+            redirect_url = add_query_params(login_url, {"next": request.path})
+            return redirect(redirect_url)
 
     return render(request, "order.html")
 
 
 @login_required
 def create_review(request):
-    if request.method == 'POST':
+    if request.method == "POST":
         form = ReviewForm(request.POST, request.FILES)
         if form.is_valid():
             review = form.save(commit=False)
             review.user = request.user
             review.save()
-            messages.success(request, 'Спасибо за ваш отзыв!')
-            return redirect('lk')
+            messages.success(request, "Спасибо за ваш отзыв!")
+            return redirect("lk")
     else:
         form = ReviewForm()
-    
-    return render(request, 'review.html', {'form': form})
+
+    return render(request, "review.html", {"form": form})

@@ -1,6 +1,14 @@
 from django.contrib import admin
 
-from .models import Allergy, Ingredient, Recipe, RecipeIngredient, Subscription, Review
+from .models import (
+    Allergy,
+    Ingredient,
+    Recipe,
+    RecipeIngredient,
+    Subscription,
+    Review,
+    PromoCode,
+)
 
 
 @admin.register(Allergy)
@@ -78,6 +86,22 @@ class SubscriptionAdmin(admin.ModelAdmin):
 
 @admin.register(Review)
 class ReviewAdmin(admin.ModelAdmin):
-    list_display = ['user', 'rating', 'created_at']
-    list_filter = ['rating',]
-    readonly_fields = ['created_at', 'updated_at']
+    list_display = ["user", "rating", "created_at"]
+    list_filter = [
+        "rating",
+    ]
+    readonly_fields = ["created_at", "updated_at"]
+
+
+@admin.register(PromoCode)
+class PromoCodeAdmin(admin.ModelAdmin):
+    list_display = (
+        "code",
+        "discount_percent",
+        "active",
+        "valid_from",
+        "valid_to",
+    )
+
+    list_filter = ("active",)
+    search_fields = ("code",)
