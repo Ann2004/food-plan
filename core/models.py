@@ -242,6 +242,11 @@ class Review(models.Model):
         return f"Отзыв от {self.user.username} - {self.rating}★"
 
 
+def calculate_price(persons_count, meals_count):
+    base_price = 1000
+    return base_price * persons_count * meals_count
+
+
 class PromoCode(models.Model):
     code = models.CharField(max_length=50, unique=True, verbose_name="Промокод")
     discount_percent = models.PositiveSmallIntegerField(verbose_name="Скидка (%)")
