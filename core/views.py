@@ -2,6 +2,7 @@ import calendar
 from datetime import date
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
+from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -13,7 +14,8 @@ import json
 from decimal import Decimal
 
 from .forms import LoginForm, ProfileForm, RegistrationForm, ReviewForm, SubscriptionForm
-from .models import Allergy, MealType, Profile, Recipe, Subscription, SubscriptionPeriod, PromoCode, Review, calculate_price
+from .models import Allergy, DailyMenu, MealType, Profile, Recipe, Subscription, SubscriptionPeriod, PromoCode, Review, calculate_price
+from .services import generate_daily_menu
 
 
 def home(request):
@@ -117,6 +119,7 @@ def personal_account(request):
     )
 
 
+@staff_member_required
 def recipe_detail(request, pk):
     recipe = get_object_or_404(
         Recipe.objects.prefetch_related("ingredients__ingredient__contains_allergies"),
@@ -137,6 +140,93 @@ def recipe_detail(request, pk):
     }
 
     return render(request, "card.html", context)
+
+
+@login_required
+def daily_menu(request, pk):
+    subscription = get_object_or_404(
+        Subscription,
+        pk=pk,
+        user=request.user,
+        status=Subscription.Status.ACTIVE,
+    )
+
+    generate_daily_menu(subscription, date.today())
+
+    menus = DailyMenu.objects.filter(
+        subscription=subscription,
+        date=date.today(),
+    ).select_related("meal_type", "recipe").order_by("meal_type")
+
+    menu_data = []
+    for menu in menus:
+        recipe = menu.recipe
+        recipe_ingredients = recipe.ingredients.select_related("ingredient").all()
+        scaled_ingredients = [
+            {
+                "name": ri.ingredient.name,
+                "quantity": ri.quantity_grams * subscription.persons_count,
+            }
+            for ri in recipe_ingredients
+        ]
+        total_calories = sum(
+            ri.ingredient.calories_per_100g * ri.quantity_grams / 100
+            for ri in recipe_ingredients
+        )
+        menu_data.append({
+            "menu": menu,
+            "recipe": recipe,
+            "scaled_ingredients": scaled_ingredients,
+            "total_calories": int(total_calories),
+        })
+
+    context = {
+        "subscription": subscription,
+        "menu_data": menu_data,
+    }
+    return render(request, "daily_menu.html", context)
+
+
+@login_required
+def daily_recipe_detail(request, subscription_pk, daily_menu_pk):
+    subscription = get_object_or_404(
+        Subscription,
+        pk=subscription_pk,
+        user=request.user,
+        status=Subscription.Status.ACTIVE,
+    )
+
+    daily_menu = get_object_or_404(
+        DailyMenu,
+        pk=daily_menu_pk,
+        subscription=subscription,
+    )
+
+    recipe = daily_menu.recipe
+    recipe_ingredients = recipe.ingredients.select_related("ingredient").all()
+
+    scaled_ingredients = [
+        {
+            "name": ri.ingredient.name,
+            "quantity": ri.quantity_grams * subscription.persons_count,
+        }
+        for ri in recipe_ingredients
+    ]
+
+    total_calories = sum(
+        ri.ingredient.calories_per_100g * ri.quantity_grams / 100
+        for ri in recipe_ingredients
+    )
+
+    context = {
+        "subscription": subscription,
+        "daily_menu": daily_menu,
+        "recipe": recipe,
+        "scaled_ingredients": scaled_ingredients,
+        "total_calories": int(total_calories),
+        "persons_count": subscription.persons_count,
+    }
+    return render(request, "daily_recipe_card.html", context)
 
 
 @login_required

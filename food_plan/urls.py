@@ -22,6 +22,16 @@ urlpatterns = (
             name="subscription_detail",
         ),
         path(
+            "subscription/<int:pk>/today/",
+            views.daily_menu,
+            name="daily_menu",
+        ),
+        path(
+            "subscription/<int:subscription_pk>/recipe/<int:daily_menu_pk>/",
+            views.daily_recipe_detail,
+            name="daily_recipe_detail",
+        ),
+        path(
             "password-reset/",
             auth_views.PasswordResetView.as_view(
                 template_name="password_reset.html",
