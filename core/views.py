@@ -217,6 +217,7 @@ def order(request):
                 "original_price": original_price,
                 "promo": promo,
                 "promo_discount": promo.discount_percent if promo else 0,
+                "selected_meals": selected_meals,
                 "meal_prices": meal_prices,
                 "period_multipliers": period_multipliers,
             }
