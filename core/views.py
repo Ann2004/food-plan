@@ -9,6 +9,9 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 
+import json
+from decimal import Decimal
+
 from .forms import LoginForm, ProfileForm, RegistrationForm, ReviewForm, SubscriptionForm
 from .models import Allergy, MealType, Profile, Recipe, Subscription, SubscriptionPeriod, PromoCode, Review, calculate_price
 
@@ -172,6 +175,12 @@ def order(request):
     allergies = Allergy.objects.all()
     meal_types = MealType.objects.all()
 
+    meal_prices = json.dumps({str(mt.pk): mt.base_price for mt in meal_types})
+    period_multipliers = json.dumps({
+        str(sp.months): float(sp.price_multiplier)
+        for sp in SubscriptionPeriod.objects.all()
+    })
+
     if request.method == "POST":
         promo_code_str = request.POST.get("promo_code", "").strip()
         promo = None
@@ -207,6 +216,9 @@ def order(request):
                 "price": price,
                 "original_price": original_price,
                 "promo": promo,
+                "promo_discount": promo.discount_percent if promo else 0,
+                "meal_prices": meal_prices,
+                "period_multipliers": period_multipliers,
             }
             return render(request, "order.html", context)
 
@@ -268,6 +280,9 @@ def order(request):
         "meal_types": meal_types,
         "price": 0,
         "promo": None,
+        "promo_discount": 0,
+        "meal_prices": meal_prices,
+        "period_multipliers": period_multipliers,
     }
 
     return render(request, "order.html", context)
