@@ -14,7 +14,7 @@
             <div class="mb-5">
                 <h2>{{ subscription.get_diet_type_display }}</h2>
                 <div class="d-flex flex-wrap gap-3 mt-3">
-                    <div class="badge bg-success p-2">{{ subscription.user.profile.calories_per_day }} ккал</div>
+                    <div class="badge bg-success p-2">{{ subscription.calories_per_day }} ккал</div>
                     <div class="badge bg-dark p-2">{{ subscription.period }} мес.</div>
                     <div class="badge bg-secondary p-2">{{ subscription.meals.all|length }} приёма пищи</div>
                 </div>

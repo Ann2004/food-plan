@@ -132,15 +132,6 @@ class Profile(models.Model):
         blank=True,
         null=True,
     )
-    allergies = models.ManyToManyField(
-        Allergy,
-        blank=True,
-        verbose_name="Аллергии",
-    )
-    calories_per_day = models.PositiveIntegerField(
-        default=2000,
-        verbose_name="Калорий в день",
-    )
 
     def __str__(self):
         return self.user.email
@@ -177,6 +168,15 @@ class Subscription(models.Model):
         MealType,
         blank=True,
         verbose_name="Приёмы пищи",
+    )
+    allergies = models.ManyToManyField(
+        Allergy,
+        blank=True,
+        verbose_name="Аллергии",
+    )
+    calories_per_day = models.PositiveIntegerField(
+        default=2000,
+        verbose_name="Калорий в день",
     )
     price = models.DecimalField(
         max_digits=10,
