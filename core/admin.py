@@ -3,6 +3,7 @@ from django.contrib import admin
 from .models import (
     Allergy,
     Ingredient,
+    MealType,
     Profile,
     Recipe,
     RecipeIngredient,
@@ -11,6 +12,11 @@ from .models import (
     Review,
     PromoCode,
 )
+
+
+@admin.register(MealType)
+class MealTypeAdmin(admin.ModelAdmin):
+    list_display = ("code", "name", "base_price")
 
 
 @admin.register(Allergy)
