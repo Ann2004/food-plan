@@ -116,7 +116,7 @@ def personal_account(request):
 
 def recipe_detail(request, pk):
     recipe = get_object_or_404(
-        Recipe.objects.prefetch_related("ingredients__ingredient"),
+        Recipe.objects.prefetch_related("ingredients__ingredient__contains_allergies"),
         pk=pk,
     )
 

@@ -22,6 +22,7 @@ class AllergyAdmin(admin.ModelAdmin):
 class IngredientAdmin(admin.ModelAdmin):
     list_display = ("id", "name", "calories_per_100g")
     search_fields = ("name",)
+    filter_horizontal = ("contains_allergies",)
 
 
 @admin.register(Profile)
@@ -38,20 +39,12 @@ class RecipeIngredientInline(admin.TabularInline):
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
     list_display = ("id", "name", "meal_type", "suitable_for_diet", "cooking_time")
-    list_filter = ("meal_type", "suitable_for_diet", "contains_allergies")
+    list_filter = ("meal_type", "suitable_for_diet")
     search_fields = ("name", "description")
-    filter_horizontal = ("contains_allergies",)
     inlines = [RecipeIngredientInline]
     fieldsets = (
         (None, {"fields": ("name", "description", "image", "cooking_time")}),
         ("Типы", {"fields": ("meal_type", "suitable_for_diet")}),
-        (
-            "Аллергены",
-            {
-                "fields": ("contains_allergies",),
-                "description": "Выберите все аллергены, которые содержит блюдо",
-            },
-        ),
     )
 
 
