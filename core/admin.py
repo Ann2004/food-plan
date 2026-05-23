@@ -7,6 +7,7 @@ from .models import (
     Recipe,
     RecipeIngredient,
     Subscription,
+    SubscriptionPeriod,
     Review,
     PromoCode,
 )
@@ -46,6 +47,11 @@ class RecipeAdmin(admin.ModelAdmin):
         (None, {"fields": ("name", "description", "image", "cooking_time")}),
         ("Типы", {"fields": ("meal_type", "suitable_for_diet")}),
     )
+
+
+@admin.register(SubscriptionPeriod)
+class SubscriptionPeriodAdmin(admin.ModelAdmin):
+    list_display = ("months", "name", "price_multiplier")
 
 
 @admin.register(Subscription)

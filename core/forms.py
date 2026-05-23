@@ -336,8 +336,8 @@ class SubscriptionForm(forms.Form):
         choices=DietType.choices,
         widget=forms.RadioSelect(attrs={"class": "foodplan_selected d-none"}),
     )
-    period = forms.ChoiceField(
-        choices=[(p.value, p.label) for p in SubscriptionPeriod],
+    period = forms.ModelChoiceField(
+        queryset=SubscriptionPeriod.objects.all(),
         widget=forms.Select(attrs={"class": "form-select"}),
     )
     persons_count = forms.ChoiceField(

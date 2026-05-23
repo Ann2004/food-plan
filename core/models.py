@@ -22,11 +22,22 @@ class DietType(models.TextChoices):
     KETO = "keto", "Кето"
 
 
-class SubscriptionPeriod(models.IntegerChoices):
-    MONTH_1 = 1, "1 месяц"
-    MONTH_3 = 3, "3 месяца"
-    MONTH_6 = 6, "6 месяцев"
-    MONTH_12 = 12, "12 месяцев"
+class SubscriptionPeriod(models.Model):
+    months = models.PositiveSmallIntegerField(unique=True, verbose_name="Месяцев")
+    name = models.CharField(max_length=50, verbose_name="Название")
+    price_multiplier = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=1.0,
+        verbose_name="Множитель цены",
+    )
+
+    class Meta:
+        verbose_name = "Период подписки"
+        verbose_name_plural = "Периоды подписки"
+
+    def __str__(self):
+        return self.name
 
 
 class Allergy(models.Model):
@@ -167,9 +178,10 @@ class Subscription(models.Model):
         choices=DietType.choices,
         verbose_name="Тип питания",
     )
-    period = models.IntegerField(
-        choices=SubscriptionPeriod.choices,
-        verbose_name="Период (месяцев)",
+    period = models.ForeignKey(
+        SubscriptionPeriod,
+        on_delete=models.PROTECT,
+        verbose_name="Период подписки",
     )
     persons_count = models.PositiveSmallIntegerField(
         default=1,
