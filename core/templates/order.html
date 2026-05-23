@@ -9,7 +9,11 @@
                      width="189"
                      alt="">
             </a>
-            <h3 class="text-secondary mt-2 me-2">Стоимость: {{ price }}₽</h3>
+            <h3 class="text-secondary mt-2 me-2" id="price-display">
+                Стоимость:
+                <span id="original-price" class="text-decoration-line-through d-none"></span>
+                <span id="final-price"></span>
+            </h3>
             <button form="order"
                     type="submit"
                     class="btn shadow-none btn-sm btn-outline-success foodplan_green foodplan__border_green">
@@ -156,8 +160,9 @@
                         <label class="form-label me-2 mb-0">Промокод</label>
                         <input type="text" name="promo_code" class="form-control me-2">
                         <button type="submit"
+                                name="apply_promo"
                                 class="btn shadow-none btn-outline-success foodplan_green foodplan__border_green">
-                            Применить
+                                Применить
                         </button>
                     </div>
                     {% if messages %}
@@ -179,4 +184,92 @@
             </form>
         </div>
     </section>
+    <script id="pricing-data" type="application/json">
+        {
+            "mealPrices": {{ meal_prices|safe }},
+            "periodMultipliers": {{ period_multipliers|safe }},
+            "promoDiscount": {{ promo_discount }},
+            "initialPrice": {{ price|default:0 }},
+            "initialOriginalPrice": {{ original_price|default:0 }}
+        }
+    </script>
 {% endblock content %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var pricingData = JSON.parse(document.getElementById('pricing-data').textContent);
+        var mealPrices = pricingData.mealPrices;
+        var periodMultipliers = pricingData.periodMultipliers;
+        var promoDiscount = pricingData.promoDiscount;
+        var initialPrice = pricingData.initialPrice;
+        var initialOriginalPrice = pricingData.initialOriginalPrice;
+
+        var priceDisplay = document.getElementById('price-display');
+        var originalPriceEl = document.getElementById('original-price');
+        var finalPriceEl = document.getElementById('final-price');
+
+        function formatPrice(price) {
+            return Math.round(price).toString() + '₽';
+        }
+
+        function calculatePrice() {
+            var periodSelect = document.querySelector('select[name="period"]');
+            var personsSelect = document.querySelector('select[name="persons_count"]');
+            var mealSelects = document.querySelectorAll('select[name="meals"]');
+
+            var period = periodSelect ? periodSelect.value : '1';
+            var persons = personsSelect ? parseInt(personsSelect.value) : 1;
+
+            var mealsTotal = 0;
+            mealSelects.forEach(function (select) {
+                if (select.value) {
+                    mealsTotal += mealPrices[select.value] || 0;
+                }
+            });
+
+            var multiplier = periodMultipliers[period] || 1.0;
+            var originalPrice = mealsTotal * multiplier * persons;
+            var finalPrice = originalPrice;
+
+            if (promoDiscount > 0) {
+                finalPrice = originalPrice * (1 - promoDiscount / 100);
+            }
+
+            return { original: originalPrice, final: finalPrice };
+        }
+
+        function updateDisplay() {
+            var prices = calculatePrice();
+
+            if (promoDiscount > 0 && prices.original > 0) {
+                originalPriceEl.textContent = formatPrice(prices.original);
+                originalPriceEl.classList.remove('d-none');
+                finalPriceEl.classList.add('text-success');
+            } else {
+                originalPriceEl.classList.add('d-none');
+                finalPriceEl.classList.remove('text-success');
+            }
+
+            finalPriceEl.textContent = formatPrice(prices.final);
+        }
+
+        // Set initial state from server-rendered values
+        if (initialOriginalPrice > 0 && initialPrice > 0 && initialOriginalPrice !== initialPrice) {
+            originalPriceEl.textContent = formatPrice(initialOriginalPrice);
+            originalPriceEl.classList.remove('d-none');
+            finalPriceEl.classList.add('text-success');
+            finalPriceEl.textContent = formatPrice(initialPrice);
+        } else if (initialPrice > 0) {
+            finalPriceEl.textContent = formatPrice(initialPrice);
+        } else {
+            updateDisplay();
+        }
+
+        // Attach listeners
+        document.querySelectorAll('select[name="period"], select[name="persons_count"], select[name="meals"]').forEach(function (el) {
+            el.addEventListener('change', updateDisplay);
+        });
+    });
+</script>
+{% endblock extra_js %}

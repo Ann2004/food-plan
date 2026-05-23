@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
@@ -6,6 +8,7 @@ from django.utils import timezone
 class MealType(models.Model):
     code = models.CharField(max_length=20, unique=True, verbose_name="Код")
     name = models.CharField(max_length=100, verbose_name="Название")
+    base_price = models.PositiveIntegerField(default=0, verbose_name="Базовая цена")
 
     class Meta:
         verbose_name = "Тип приёма пищи"
@@ -22,11 +25,22 @@ class DietType(models.TextChoices):
     KETO = "keto", "Кето"
 
 
-class SubscriptionPeriod(models.IntegerChoices):
-    MONTH_1 = 1, "1 месяц"
-    MONTH_3 = 3, "3 месяца"
-    MONTH_6 = 6, "6 месяцев"
-    MONTH_12 = 12, "12 месяцев"
+class SubscriptionPeriod(models.Model):
+    months = models.PositiveSmallIntegerField(unique=True, verbose_name="Месяцев")
+    name = models.CharField(max_length=50, verbose_name="Название")
+    price_multiplier = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=1.0,
+        verbose_name="Множитель цены",
+    )
+
+    class Meta:
+        verbose_name = "Период подписки"
+        verbose_name_plural = "Периоды подписки"
+
+    def __str__(self):
+        return self.name
 
 
 class Allergy(models.Model):
@@ -167,9 +181,10 @@ class Subscription(models.Model):
         choices=DietType.choices,
         verbose_name="Тип питания",
     )
-    period = models.IntegerField(
-        choices=SubscriptionPeriod.choices,
-        verbose_name="Период (месяцев)",
+    period = models.ForeignKey(
+        SubscriptionPeriod,
+        on_delete=models.PROTECT,
+        verbose_name="Период подписки",
     )
     persons_count = models.PositiveSmallIntegerField(
         default=1,
@@ -253,9 +268,17 @@ class Review(models.Model):
         return f"Отзыв от {self.user.username} - {self.rating}★"
 
 
-def calculate_price(persons_count, meals_count):
-    base_price = 1000
-    return base_price * persons_count * meals_count
+def calculate_price(persons_count, period, meal_type_ids, promo_code=None):
+    meals_total = (
+        MealType.objects.filter(pk__in=meal_type_ids).aggregate(
+            total=models.Sum("base_price")
+        )["total"]
+        or 0
+    )
+    price = meals_total * period.price_multiplier * persons_count
+    if promo_code and promo_code.is_valid:
+        price = price * (Decimal("1") - Decimal(promo_code.discount_percent) / Decimal("100"))
+    return price
 
 
 class PromoCode(models.Model):

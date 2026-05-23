@@ -9,8 +9,11 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 
+import json
+from decimal import Decimal
+
 from .forms import LoginForm, ProfileForm, RegistrationForm, ReviewForm, SubscriptionForm
-from .models import Allergy, MealType, Profile, Recipe, Subscription, PromoCode, Review, calculate_price
+from .models import Allergy, MealType, Profile, Recipe, Subscription, SubscriptionPeriod, PromoCode, Review, calculate_price
 
 
 def home(request):
@@ -172,23 +175,50 @@ def order(request):
     allergies = Allergy.objects.all()
     meal_types = MealType.objects.all()
 
+    meal_prices = json.dumps({str(mt.pk): mt.base_price for mt in meal_types})
+    period_multipliers = json.dumps({
+        str(sp.months): float(sp.price_multiplier)
+        for sp in SubscriptionPeriod.objects.all()
+    })
+
     if request.method == "POST":
-        promo_code = request.POST.get("promo_code")
-
-        if promo_code and not request.POST.get("diet_type"):
+        promo_code_str = request.POST.get("promo_code", "").strip()
+        promo = None
+        if promo_code_str:
             promo = PromoCode.objects.filter(
-                code__iexact=promo_code,
+                code__iexact=promo_code_str,
             ).first()
-
             if not promo or not promo.is_valid:
                 messages.error(request, "Промокод недействителен")
+                promo = None
 
+        if "apply_promo" in request.POST:
             form = SubscriptionForm()
+            selected_meals = [
+                pk for pk in request.POST.getlist("meals") if pk
+            ]
+            period_id = request.POST.get("period")
+            period = SubscriptionPeriod.objects.filter(months=period_id).first()
+            persons_count = int(request.POST.get("persons_count", 1))
+            original_price = 0
+            price = 0
+            if period and selected_meals:
+                original_price = calculate_price(
+                    persons_count, period, selected_meals
+                )
+                price = calculate_price(
+                    persons_count, period, selected_meals, promo_code=promo
+                )
             context = {
                 "form": form,
                 "allergies": allergies,
                 "meal_types": meal_types,
-                "price": 0,
+                "price": price,
+                "original_price": original_price,
+                "promo": promo,
+                "promo_discount": promo.discount_percent if promo else 0,
+                "meal_prices": meal_prices,
+                "period_multipliers": period_multipliers,
             }
             return render(request, "order.html", context)
 
@@ -202,10 +232,10 @@ def order(request):
             selected_meals = [
                 pk for pk in request.POST.getlist("meals") if pk
             ]
-            meals_count = len(selected_meals)
 
+            period = form.cleaned_data["period"]
             start = timezone.now().date()
-            month = start.month - 1 + int(form.cleaned_data["period"])
+            month = start.month - 1 + period.months
             year = start.year + month // 12
             month = month % 12 + 1
             day = min(start.day, calendar.monthrange(year, month)[1])
@@ -220,12 +250,14 @@ def order(request):
             subscription = Subscription.objects.create(
                 user=request.user,
                 diet_type=form.cleaned_data["diet_type"],
-                period=int(form.cleaned_data["period"]),
+                period=period,
                 persons_count=int(form.cleaned_data["persons_count"]),
                 calories_per_day=calories,
                 price=calculate_price(
                     int(form.cleaned_data["persons_count"]),
-                    meals_count,
+                    period,
+                    selected_meals,
+                    promo_code=promo,
                 ),
                 start_date=start,
                 end_date=end,
@@ -247,6 +279,10 @@ def order(request):
         "allergies": allergies,
         "meal_types": meal_types,
         "price": 0,
+        "promo": None,
+        "promo_discount": 0,
+        "meal_prices": meal_prices,
+        "period_multipliers": period_multipliers,
     }
 
     return render(request, "order.html", context)
