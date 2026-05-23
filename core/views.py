@@ -202,10 +202,10 @@ def order(request):
             selected_meals = [
                 pk for pk in request.POST.getlist("meals") if pk
             ]
-            meals_count = len(selected_meals)
 
+            period = form.cleaned_data["period"]
             start = timezone.now().date()
-            month = start.month - 1 + int(form.cleaned_data["period"])
+            month = start.month - 1 + period.months
             year = start.year + month // 12
             month = month % 12 + 1
             day = min(start.day, calendar.monthrange(year, month)[1])
@@ -220,12 +220,13 @@ def order(request):
             subscription = Subscription.objects.create(
                 user=request.user,
                 diet_type=form.cleaned_data["diet_type"],
-                period=int(form.cleaned_data["period"]),
+                period=period,
                 persons_count=int(form.cleaned_data["persons_count"]),
                 calories_per_day=calories,
                 price=calculate_price(
                     int(form.cleaned_data["persons_count"]),
-                    meals_count,
+                    period,
+                    selected_meals,
                 ),
                 start_date=start,
                 end_date=end,

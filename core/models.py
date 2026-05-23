@@ -266,9 +266,14 @@ class Review(models.Model):
         return f"Отзыв от {self.user.username} - {self.rating}★"
 
 
-def calculate_price(persons_count, meals_count):
-    base_price = 1000
-    return base_price * persons_count * meals_count
+def calculate_price(persons_count, period, meal_type_ids):
+    meals_total = (
+        MealType.objects.filter(pk__in=meal_type_ids).aggregate(
+            total=models.Sum("base_price")
+        )["total"]
+        or 0
+    )
+    return meals_total * period.price_multiplier * persons_count
 
 
 class PromoCode(models.Model):
