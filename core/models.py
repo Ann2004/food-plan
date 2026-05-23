@@ -241,6 +241,35 @@ class Subscription(models.Model):
         return f"{self.user.username} — {self.get_diet_type_display()}"
 
 
+class DailyMenu(models.Model):
+    subscription = models.ForeignKey(
+        Subscription,
+        on_delete=models.CASCADE,
+        related_name="daily_menus",
+        verbose_name="Подписка",
+    )
+    date = models.DateField(verbose_name="Дата")
+    meal_type = models.ForeignKey(
+        MealType,
+        on_delete=models.PROTECT,
+        verbose_name="Тип приёма пищи",
+    )
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.PROTECT,
+        verbose_name="Рецепт",
+    )
+
+    class Meta:
+        verbose_name = "Меню дня"
+        verbose_name_plural = "Меню дня"
+        unique_together = ("subscription", "date", "meal_type")
+        ordering = ["date", "meal_type"]
+
+    def __str__(self):
+        return f"{self.subscription} — {self.date} — {self.meal_type.name}"
+
+
 class Review(models.Model):
     user = models.ForeignKey(
         User,
