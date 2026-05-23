@@ -49,6 +49,9 @@ class Ingredient(models.Model):
     calories_per_100g = models.PositiveIntegerField(
         default=0, verbose_name="Калорийность (ккал на 100г)"
     )
+    contains_allergies = models.ManyToManyField(
+        Allergy, blank=True, verbose_name="Содержит аллергены"
+    )
 
     class Meta:
         verbose_name = "Ингредиент"
@@ -76,9 +79,6 @@ class Recipe(models.Model):
         default=DietType.CLASSIC,
         verbose_name="Подходит для диеты",
     )
-    contains_allergies = models.ManyToManyField(
-        Allergy, blank=True, verbose_name="Содержит аллергены"
-    )
     cooking_time = models.PositiveSmallIntegerField(
         default=30, verbose_name="Время приготовления (мин)"
     )
@@ -89,6 +89,17 @@ class Recipe(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.meal_type.name})"
+
+    @property
+    def allergies(self):
+        seen = set()
+        result = []
+        for ri in self.ingredients.all():
+            for allergy in ri.ingredient.contains_allergies.all():
+                if allergy.pk not in seen:
+                    seen.add(allergy.pk)
+                    result.append(allergy)
+        return result
 
 
 class RecipeIngredient(models.Model):
