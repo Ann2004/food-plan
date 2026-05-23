@@ -1,7 +1,10 @@
+from datetime import date
+
 from django.contrib import admin
 
 from .models import (
     Allergy,
+    DailyMenu,
     Ingredient,
     MealType,
     Profile,
@@ -12,6 +15,7 @@ from .models import (
     Review,
     PromoCode,
 )
+from .services import generate_daily_menu
 
 
 @admin.register(MealType)
@@ -76,6 +80,7 @@ class SubscriptionAdmin(admin.ModelAdmin):
     list_filter = ("diet_type", "status", "period")
     search_fields = ("user__username", "user__email")
     filter_horizontal = ("meals", "allergies")
+    actions = ["refresh_daily_menu"]
     fieldsets = (
         (None, {"fields": ("user", "status")}),
         (
@@ -93,6 +98,25 @@ class SubscriptionAdmin(admin.ModelAdmin):
         ("Оплата", {"fields": ("price", "payment_id")}),
         ("Период", {"fields": ("period", "start_date", "end_date")}),
     )
+
+    @admin.action(description="Пересоздать меню на сегодня")
+    def refresh_daily_menu(self, request, queryset):
+        today = date.today()
+        for subscription in queryset:
+            DailyMenu.objects.filter(
+                subscription=subscription,
+                date=today,
+            ).delete()
+            generate_daily_menu(subscription, today)
+        self.message_user(request, f"Меню пересоздано для {queryset.count()} подписок.")
+
+
+@admin.register(DailyMenu)
+class DailyMenuAdmin(admin.ModelAdmin):
+    list_display = ("id", "subscription", "date", "meal_type", "recipe")
+    list_filter = ("date", "meal_type")
+    search_fields = ("subscription__user__username", "subscription__user__email")
+    readonly_fields = ("subscription", "date", "meal_type", "recipe")
 
 
 @admin.register(Review)
