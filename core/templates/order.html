@@ -9,7 +9,15 @@
                      width="189"
                      alt="">
             </a>
-            <h3 class="text-secondary mt-2 me-2">Стоимость: {{ price }}₽</h3>
+            <h3 class="text-secondary mt-2 me-2">
+                Стоимость:
+                {% if promo and original_price != price %}
+                    <span class="text-decoration-line-through">{{ original_price|floatformat:0 }}₽</span>
+                    <span class="text-success">{{ price|floatformat:0 }}₽</span>
+                {% else %}
+                    {{ price|floatformat:0 }}₽
+                {% endif %}
+            </h3>
             <button form="order"
                     type="submit"
                     class="btn shadow-none btn-sm btn-outline-success foodplan_green foodplan__border_green">
@@ -156,8 +164,9 @@
                         <label class="form-label me-2 mb-0">Промокод</label>
                         <input type="text" name="promo_code" class="form-control me-2">
                         <button type="submit"
+                                name="apply_promo"
                                 class="btn shadow-none btn-outline-success foodplan_green foodplan__border_green">
-                            Применить
+                                Применить
                         </button>
                     </div>
                     {% if messages %}

@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
@@ -266,14 +268,17 @@ class Review(models.Model):
         return f"Отзыв от {self.user.username} - {self.rating}★"
 
 
-def calculate_price(persons_count, period, meal_type_ids):
+def calculate_price(persons_count, period, meal_type_ids, promo_code=None):
     meals_total = (
         MealType.objects.filter(pk__in=meal_type_ids).aggregate(
             total=models.Sum("base_price")
         )["total"]
         or 0
     )
-    return meals_total * period.price_multiplier * persons_count
+    price = meals_total * period.price_multiplier * persons_count
+    if promo_code and promo_code.is_valid:
+        price = price * (Decimal("1") - Decimal(promo_code.discount_percent) / Decimal("100"))
+    return price
 
 
 class PromoCode(models.Model):
