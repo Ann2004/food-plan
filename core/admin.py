@@ -26,8 +26,7 @@ class IngredientAdmin(admin.ModelAdmin):
 
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = ("id", "user", "calories_per_day")
-    filter_horizontal = ("allergies",)
+    list_display = ("id", "user")
 
 
 class RecipeIngredientInline(admin.TabularInline):
@@ -71,7 +70,7 @@ class SubscriptionAdmin(admin.ModelAdmin):
     )
     list_filter = ("diet_type", "status", "period")
     search_fields = ("user__username", "user__email")
-    filter_horizontal = ("meals",)
+    filter_horizontal = ("meals", "allergies")
     fieldsets = (
         (None, {"fields": ("user", "status")}),
         (
@@ -81,6 +80,8 @@ class SubscriptionAdmin(admin.ModelAdmin):
                     "diet_type",
                     "persons_count",
                     "meals",
+                    "allergies",
+                    "calories_per_day",
                 )
             },
         ),

@@ -196,6 +196,12 @@
                                                     <h5 class="mb-0">{{ subscription.get_diet_type_display }}</h5>
                                                     {% if subscription.status == "active" %}
                                                         <span class="badge foodplan__bg_green" style="font-size: 0.7rem;">Активна</span>
+                                                    {% elif subscription.status == "new" %}
+                                                        <span class="badge bg-warning text-dark" style="font-size: 0.7rem;">Новая</span>
+                                                    {% elif subscription.status == "paid" %}
+                                                        <span class="badge bg-info text-dark" style="font-size: 0.7rem;">Оплачена</span>
+                                                    {% elif subscription.status == "cancelled" %}
+                                                        <span class="badge bg-danger" style="font-size: 0.7rem;">Отменена</span>
                                                     {% else %}
                                                         <span class="badge bg-secondary" style="font-size: 0.7rem;">Истекла</span>
                                                     {% endif %}
@@ -216,7 +222,7 @@
                                                     </span>
                                                     <span>
                                                         Приёмов пищи:
-                                                        <strong>{{ subscription.meals_count }}</strong>
+                                                        <strong>{{ subscription.meals.count }}</strong>
                                                     </span>
                                                 </div>
                                             </div>

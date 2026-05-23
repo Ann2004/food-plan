@@ -97,7 +97,9 @@ def personal_account(request):
     show_edit = request.method == "POST" and not profile_form.is_valid()
 
     subscriptions = (
-        request.user.subscriptions.all().filter(status="active").order_by("-start_date")
+        request.user.subscriptions.filter(
+            status__in=["active", "new", "paid"]
+        ).order_by("-start_date")
     )
 
     return render(
@@ -142,8 +144,6 @@ def subscription_detail(request, pk):
         pk=pk,
         user=request.user,
     )
-
-    Profile.objects.get_or_create(user=request.user)
 
     if (
         subscription.status == "active"
@@ -211,25 +211,32 @@ def order(request):
             day = min(start.day, calendar.monthrange(year, month)[1])
             end = date(year, month, day)
 
+            calories = int(request.POST.get("calories_per_day", 2000))
+            if calories < 100:
+                calories = 100
+            elif calories > 5000:
+                calories = 5000
+
             subscription = Subscription.objects.create(
                 user=request.user,
                 diet_type=form.cleaned_data["diet_type"],
                 period=int(form.cleaned_data["period"]),
                 persons_count=int(form.cleaned_data["persons_count"]),
+                calories_per_day=calories,
                 price=calculate_price(
                     int(form.cleaned_data["persons_count"]),
                     meals_count,
                 ),
                 start_date=start,
                 end_date=end,
+                status=Subscription.Status.ACTIVE,
             )
             if selected_meals:
                 subscription.meals.set(selected_meals)
 
             selected_allergies = request.POST.getlist("allergies")
             if selected_allergies:
-                profile, _ = Profile.objects.get_or_create(user=request.user)
-                profile.allergies.set(selected_allergies)
+                subscription.allergies.set(selected_allergies)
 
             return redirect("lk")
     else:
