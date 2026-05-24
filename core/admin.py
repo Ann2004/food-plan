@@ -91,7 +91,6 @@ class SubscriptionAdmin(admin.ModelAdmin):
                     "persons_count",
                     "meals",
                     "allergies",
-                    "calories_per_day",
                 )
             },
         ),

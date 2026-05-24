@@ -200,10 +200,6 @@ class Subscription(models.Model):
         blank=True,
         verbose_name="Аллергии",
     )
-    calories_per_day = models.PositiveIntegerField(
-        default=2000,
-        verbose_name="Калорий в день",
-    )
     price = models.DecimalField(
         max_digits=10,
         decimal_places=2,

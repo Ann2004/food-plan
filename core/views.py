@@ -346,18 +346,11 @@ def order(request):
             day = min(start.day, calendar.monthrange(year, month)[1])
             end = date(year, month, day)
 
-            calories = int(request.POST.get("calories_per_day", 2000))
-            if calories < 100:
-                calories = 100
-            elif calories > 5000:
-                calories = 5000
-
             subscription = Subscription.objects.create(
                 user=request.user,
                 diet_type=form.cleaned_data["diet_type"],
                 period=period,
                 persons_count=int(form.cleaned_data["persons_count"]),
-                calories_per_day=calories,
                 price=calculate_price(
                     int(form.cleaned_data["persons_count"]),
                     period,
