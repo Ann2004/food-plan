@@ -453,22 +453,30 @@ def payment_create(request):
 @login_required
 def payment_success(request):
     subscription_id = request.session.get("current_subscription_id")
-    subscription = None
+    if not subscription_id:
+        return redirect("order")
 
-    if subscription_id:
-        subscription = Subscription.objects.filter(
-            pk=subscription_id,
-            user=request.user,
-        ).first()
-        if subscription and subscription.status == Subscription.Status.PAID:
+    subscription = get_object_or_404(
+        Subscription, pk=subscription_id, user=request.user
+    )
+
+    if subscription.status == Subscription.Status.ACTIVE:
+        if "current_subscription_id" in request.session:
+            del request.session["current_subscription_id"]
+        return render(request, "payment-success.html", {"subscription": subscription})
+
+    if subscription.payment_id:
+        payment = Payment.find_one(subscription.payment_id)
+        if payment.status == "succeeded":
+            subscription.status = Subscription.Status.ACTIVE
+            subscription.save()
             if "current_subscription_id" in request.session:
                 del request.session["current_subscription_id"]
+            return render(
+                request, "payment-success.html", {"subscription": subscription}
+            )
 
-    return render(
-        request,
-        "payment-success.html",
-        {"subscription": subscription},
-    )
+    return redirect("payment-failure")
 
 
 def payment_failure(request):
