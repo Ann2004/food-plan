@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}Ошибка оплаты — FoodPlan{% endblock title %}
+{% block content %}
+    <section class="text-center py-5">
+        <div class="container">
+            <h1 class="text-danger mb-4">Оплата не удалась</h1>
+            <p class="text-secondary mb-3">
+                К сожалению, при оплате произошла ошибка. Попробуйте ещё раз.
+            </p>
+            <a href="{% url 'order' %}"
+               class="btn btn-outline-success foodplan_green foodplan__border_green shadow-none">
+                Вернуться к оформлению
+            </a>
+            <div class="mt-3">
+                <a href="{% url 'lk' %}" class="btn btn-outline-success foodplan_green foodplan__border_green shadow-none">
+                    Личный кабинет
+                </a>
+            </div>
+        </div>
+    </section>
+{% endblock content %}

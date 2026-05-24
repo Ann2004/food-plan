@@ -108,3 +108,6 @@ else:
     MEDIA_ROOT = BASE_DIR / "media"
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+YOOKASSA_SHOP_ID = env("YOOKASSA_SHOP_ID", default="")
+YOOKASSA_SECRET_KEY = env("YOOKASSA_SECRET_KEY", default="")

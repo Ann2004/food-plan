@@ -1,21 +1,33 @@
 import calendar
+import json
+import logging
+import uuid
 from datetime import date
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
+from django.conf import settings
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
 
-import json
 from decimal import Decimal
+
+from yookassa import Configuration, Payment
 
 from .forms import LoginForm, ProfileForm, RegistrationForm, ReviewForm, SubscriptionForm
 from .models import Allergy, DailyMenu, MealType, Profile, Recipe, Subscription, SubscriptionPeriod, PromoCode, Review, calculate_price
 from .services import generate_daily_menu
+
+logger = logging.getLogger(__name__)
+
+Configuration.configure(settings.YOOKASSA_SHOP_ID, settings.YOOKASSA_SECRET_KEY)
 
 
 def home(request):
@@ -352,7 +364,7 @@ def order(request):
                 ),
                 start_date=start,
                 end_date=end,
-                status=Subscription.Status.ACTIVE,
+                status=Subscription.Status.NEW,
             )
             if selected_meals:
                 subscription.meals.set(selected_meals)
@@ -361,7 +373,8 @@ def order(request):
             if selected_allergies:
                 subscription.allergies.set(selected_allergies)
 
-            return redirect("lk")
+            request.session["current_subscription_id"] = subscription.id
+            return redirect("payment-create")
     else:
         form = SubscriptionForm()
 
@@ -393,3 +406,108 @@ def create_review(request):
         form = ReviewForm()
 
     return render(request, "review.html", {"form": form})
+
+
+@login_required
+def payment_create(request):
+    subscription_id = request.session.get("current_subscription_id")
+    if not subscription_id:
+        return redirect("order")
+
+    subscription = get_object_or_404(
+        Subscription,
+        pk=subscription_id,
+        user=request.user,
+        status=Subscription.Status.NEW,
+    )
+
+    idempotence_key = str(uuid.uuid4())
+    payment = Payment.create(
+        {
+            "amount": {
+                "value": str(subscription.price),
+                "currency": "RUB",
+            },
+            "capture": True,
+            "confirmation": {
+                "type": "redirect",
+                "return_url": request.build_absolute_uri(reverse("payment-success")),
+            },
+            "description": f"Подписка #{subscription.id}",
+            "metadata": {
+                "subscription_id": subscription.id,
+            },
+        },
+        idempotence_key,
+    )
+
+    subscription.payment_id = payment.id
+    subscription.save()
+
+    return redirect(payment.confirmation.confirmation_url)
+
+
+@login_required
+def payment_success(request):
+    subscription_id = request.session.get("current_subscription_id")
+    subscription = None
+
+    if subscription_id:
+        subscription = Subscription.objects.filter(
+            pk=subscription_id,
+            user=request.user,
+        ).first()
+        if subscription and subscription.status == Subscription.Status.PAID:
+            if "current_subscription_id" in request.session:
+                del request.session["current_subscription_id"]
+
+    return render(
+        request,
+        "payment-success.html",
+        {"subscription": subscription},
+    )
+
+
+def payment_failure(request):
+    return render(request, "payment-failure.html")
+
+
+@csrf_exempt
+@require_POST
+def yookassa_webhook(request):
+    try:
+        event = json.loads(request.body)
+    except (json.JSONDecodeError, ValueError):
+        return HttpResponse(status=400)
+
+    payment_id = event.get("object", {}).get("id")
+    status = event.get("object", {}).get("status")
+
+    if not payment_id or not status:
+        return HttpResponse(status=400)
+
+    subscription = Subscription.objects.filter(payment_id=payment_id).first()
+    if not subscription:
+        logger.warning("Webhook: subscription not found for payment_id=%s", payment_id)
+        return HttpResponse(status=404)
+
+    if status == "succeeded":
+        subscription.status = Subscription.Status.ACTIVE
+        if not subscription.start_date:
+            subscription.start_date = timezone.now().date()
+        subscription.save()
+        logger.info(
+            "Subscription #%s activated via payment %s",
+            subscription.id,
+            payment_id,
+        )
+    elif status == "canceled":
+        subscription.status = Subscription.Status.CANCELLED
+        subscription.save()
+        logger.info(
+            "Subscription #%s cancelled via payment %s",
+            subscription.id,
+            payment_id,
+        )
+
+    return HttpResponse(status=200)

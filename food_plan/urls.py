@@ -60,6 +60,10 @@ urlpatterns = (
             name="password_reset_complete",
         ),
         path('review/create/', views.create_review, name='create_review'),
+        path("payment/create/", views.payment_create, name="payment-create"),
+        path("payment/success/", views.payment_success, name="payment-success"),
+        path("payment/failure/", views.payment_failure, name="payment-failure"),
+        path("payment/webhook/", views.yookassa_webhook, name="payment-webhook"),
     ]
     + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

@@ -4,3 +4,4 @@ django-environ
 django-storages
 boto3
 psycopg2-binary
+yookassa
