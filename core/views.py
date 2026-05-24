@@ -276,10 +276,11 @@ def subscription_detail(request, pk):
 def order(request):
     allergies = Allergy.objects.all()
     meal_types = MealType.objects.all()
+    periods = SubscriptionPeriod.objects.all()
 
     meal_prices = json.dumps({str(mt.pk): mt.base_price for mt in meal_types})
     period_multipliers = json.dumps({
-        str(sp.months): float(sp.price_multiplier)
+        str(sp.pk): float(sp.price_multiplier)
         for sp in SubscriptionPeriod.objects.all()
     })
 
@@ -300,7 +301,7 @@ def order(request):
                 pk for pk in request.POST.getlist("meals") if pk
             ]
             period_id = request.POST.get("period")
-            period = SubscriptionPeriod.objects.filter(months=period_id).first()
+            period = SubscriptionPeriod.objects.filter(pk=period_id).first()
             persons_count = int(request.POST.get("persons_count", 1))
             original_price = 0
             price = 0
@@ -315,6 +316,7 @@ def order(request):
                 "form": form,
                 "allergies": allergies,
                 "meal_types": meal_types,
+                "periods": periods,
                 "price": price,
                 "original_price": original_price,
                 "promo": promo,
@@ -382,6 +384,7 @@ def order(request):
         "form": form,
         "allergies": allergies,
         "meal_types": meal_types,
+        "periods": periods,
         "price": 0,
         "promo": None,
         "promo_discount": 0,

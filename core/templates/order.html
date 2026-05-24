@@ -98,10 +98,9 @@
                             <th scope="row" class="text-start">Срок</th>
                             <td>
                                 <select name="period" class="form-select">
-                                    <option value="1" {% if request.POST.period == "1" or not request.POST.period %}selected{% endif %}>1 мес.</option>
-                                    <option value="3" {% if request.POST.period == "3" %}selected{% endif %}>3 мес.</option>
-                                    <option value="6" {% if request.POST.period == "6" %}selected{% endif %}>6 мес.</option>
-                                    <option value="12" {% if request.POST.period == "12" %}selected{% endif %}>12 мес.</option>
+                                    {% for sp in periods %}
+                                    <option value="{{ sp.pk }}" {% if request.POST.period == sp.pk|stringformat:"s" or not request.POST.period and sp.months == 1 %}selected{% endif %}>{{ sp.name }}</option>
+                                    {% endfor %}
                                 </select>
                             </td>
                         </tr>
