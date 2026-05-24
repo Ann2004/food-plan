@@ -206,6 +206,13 @@ class Subscription(models.Model):
         default=0,
         verbose_name="Цена",
     )
+    promocode = models.ForeignKey(
+        "PromoCode",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        verbose_name="Промокод",
+    )
     payment_id = models.CharField(
         max_length=100,
         blank=True,

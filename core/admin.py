@@ -73,12 +73,14 @@ class SubscriptionAdmin(admin.ModelAdmin):
         "period",
         "persons_count",
         "price",
+        "promocode",
         "start_date",
         "end_date",
         "status",
     )
     list_filter = ("diet_type", "status", "period")
     search_fields = ("user__username", "user__email")
+    autocomplete_fields = ("promocode",)
     filter_horizontal = ("meals", "allergies")
     actions = ["refresh_daily_menu"]
     fieldsets = (
@@ -94,7 +96,7 @@ class SubscriptionAdmin(admin.ModelAdmin):
                 )
             },
         ),
-        ("Оплата", {"fields": ("price", "payment_id")}),
+        ("Оплата", {"fields": ("price", "payment_id", "promocode")}),
         ("Период", {"fields": ("period", "start_date", "end_date")}),
     )
 
@@ -129,6 +131,7 @@ class ReviewAdmin(admin.ModelAdmin):
 
 @admin.register(PromoCode)
 class PromoCodeAdmin(admin.ModelAdmin):
+    ordering = ("code",)
     list_display = (
         "code",
         "discount_percent",
