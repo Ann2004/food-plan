@@ -1,20 +1,17 @@
 from pathlib import Path
 
 import environ
+from django.core.exceptions import ImproperlyConfigured
 
-env = environ.Env(
-    DEBUG=(bool, True),
-    MINIO_USE_SSL=(bool, False),
-    USE_MINIO=(bool, False),
-)
+env = environ.Env()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 environ.Env.read_env(BASE_DIR / ".env")
 
 SECRET_KEY = env("SECRET_KEY")
-DEBUG = env("DEBUG")
-USE_MINIO = env("USE_MINIO")
+DEBUG = env.bool("DEBUG", default=False)
+USE_MINIO = env.bool("USE_MINIO", default=True)
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[])
 CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])
 
@@ -29,6 +26,17 @@ INSTALLED_APPS = [
 ]
 
 if USE_MINIO:
+    MINIO_ENDPOINT = env("MINIO_ENDPOINT")
+    MINIO_ACCESS_KEY = env("MINIO_ACCESS_KEY")
+    MINIO_SECRET_KEY = env("MINIO_SECRET_KEY")
+    MINIO_BUCKET_NAME = env("MINIO_BUCKET_NAME")
+    MINIO_USE_SSL = env.bool("MINIO_USE_SSL", default=True)
+    if not all([MINIO_ENDPOINT, MINIO_ACCESS_KEY, MINIO_SECRET_KEY, MINIO_BUCKET_NAME]):
+        raise ImproperlyConfigured(
+            "MINIO_ENDPOINT, MINIO_ACCESS_KEY, MINIO_SECRET_KEY, and MINIO_BUCKET_NAME "
+            "are required when USE_MINIO=True."
+        )
+
     INSTALLED_APPS.append("storages")
 
 MIDDLEWARE = [
@@ -95,19 +103,19 @@ if USE_MINIO:
         "default": {"BACKEND": "food_plan.storage.MediaStorage"},
         "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
     }
-    MEDIA_URL = f"{'https' if env('MINIO_USE_SSL') else 'http'}://{env('MINIO_ENDPOINT')}/{env('MINIO_BUCKET_NAME')}/media/"
-    AWS_S3_ENDPOINT_URL = f"{'https' if env('MINIO_USE_SSL') else 'http'}://{env('MINIO_ENDPOINT')}"
-    AWS_ACCESS_KEY_ID = env("MINIO_ACCESS_KEY")
-    AWS_SECRET_ACCESS_KEY = env("MINIO_SECRET_KEY")
-    AWS_STORAGE_BUCKET_NAME = env("MINIO_BUCKET_NAME")
+    MEDIA_URL = f"{'https' if MINIO_USE_SSL else 'http'}://{MINIO_ENDPOINT}/{MINIO_BUCKET_NAME}/media/"
+    AWS_S3_ENDPOINT_URL = f"{'https' if MINIO_USE_SSL else 'http'}://{MINIO_ENDPOINT}"
+    AWS_ACCESS_KEY_ID = MINIO_ACCESS_KEY
+    AWS_SECRET_ACCESS_KEY = MINIO_SECRET_KEY
+    AWS_STORAGE_BUCKET_NAME = MINIO_BUCKET_NAME
     AWS_S3_REGION_NAME = ""
-    AWS_S3_CUSTOM_DOMAIN = f"{env('MINIO_ENDPOINT')}/{env('MINIO_BUCKET_NAME')}"
+    AWS_S3_CUSTOM_DOMAIN = f"{MINIO_ENDPOINT}/{MINIO_BUCKET_NAME}"
     AWS_QUERYSTRING_EXPIRE = 3600
 else:
     MEDIA_URL = "/media/"
     MEDIA_ROOT = BASE_DIR / "media"
 
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+EMAIL_BACKEND = env("EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend")
 
-YOOKASSA_SHOP_ID = env("YOOKASSA_SHOP_ID", default="")
-YOOKASSA_SECRET_KEY = env("YOOKASSA_SECRET_KEY", default="")
+YOOKASSA_SHOP_ID = env("YOOKASSA_SHOP_ID", default="") if DEBUG else env("YOOKASSA_SHOP_ID")
+YOOKASSA_SECRET_KEY = env("YOOKASSA_SECRET_KEY", default="") if DEBUG else env("YOOKASSA_SECRET_KEY")
