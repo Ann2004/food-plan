@@ -49,7 +49,7 @@ def generate_daily_menu(subscription, target_date):
 
         chosen = random.choice(candidates)
 
-        DailyMenu.objects.update_or_create(
+        DailyMenu.objects.get_or_create(
             subscription=subscription,
             date=target_date,
             meal_type=meal_type,
