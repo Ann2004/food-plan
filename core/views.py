@@ -46,6 +46,12 @@ def auth(request):
         login(request, login_form.get_user())
         return redirect("home")
 
+    if request.method == "POST":
+        logger.warning(
+            "Failed login for email=%s",
+            request.POST.get("email", ""),
+        )
+
     return render(request, "auth.html", {"form": login_form})
 
 
@@ -418,24 +424,32 @@ def payment_create(request):
     )
 
     idempotence_key = str(uuid.uuid4())
-    payment = Payment.create(
-        {
-            "amount": {
-                "value": str(subscription.price),
-                "currency": "RUB",
+    try:
+        payment = Payment.create(
+            {
+                "amount": {
+                    "value": str(subscription.price),
+                    "currency": "RUB",
+                },
+                "capture": True,
+                "confirmation": {
+                    "type": "redirect",
+                    "return_url": request.build_absolute_uri(reverse("payment-success")),
+                },
+                "description": f"Подписка #{subscription.id}",
+                "metadata": {
+                    "subscription_id": subscription.id,
+                },
             },
-            "capture": True,
-            "confirmation": {
-                "type": "redirect",
-                "return_url": request.build_absolute_uri(reverse("payment-success")),
-            },
-            "description": f"Подписка #{subscription.id}",
-            "metadata": {
-                "subscription_id": subscription.id,
-            },
-        },
-        idempotence_key,
-    )
+            idempotence_key,
+        )
+    except Exception:
+        logger.error(
+            "Yookassa Payment.create failed for subscription #%s",
+            subscription.id,
+            exc_info=True,
+        )
+        return redirect("payment-failure")
 
     subscription.payment_id = payment.id
     subscription.save()
@@ -459,7 +473,15 @@ def payment_success(request):
         return render(request, "payment-success.html", {"subscription": subscription})
 
     if subscription.payment_id:
-        payment = Payment.find_one(subscription.payment_id)
+        try:
+            payment = Payment.find_one(subscription.payment_id)
+        except Exception:
+            logger.error(
+                "Yookassa Payment.find_one failed for payment %s",
+                subscription.payment_id,
+                exc_info=True,
+            )
+            return redirect("payment-failure")
         if payment.status == "succeeded":
             subscription.status = Subscription.Status.ACTIVE
             subscription.save()
@@ -482,12 +504,14 @@ def yookassa_webhook(request):
     try:
         event = json.loads(request.body)
     except (json.JSONDecodeError, ValueError):
+        logger.warning("Webhook: invalid JSON payload")
         return HttpResponse(status=400)
 
     payment_id = event.get("object", {}).get("id")
     status = event.get("object", {}).get("status")
 
     if not payment_id or not status:
+        logger.warning("Webhook: missing payment_id or status")
         return HttpResponse(status=400)
 
     subscription = Subscription.objects.filter(payment_id=payment_id).first()
@@ -500,17 +524,13 @@ def yookassa_webhook(request):
         if not subscription.start_date:
             subscription.start_date = timezone.now().date()
         subscription.save()
-        logger.info(
-            "Subscription #%s activated via payment %s",
-            subscription.id,
-            payment_id,
-        )
     elif status == "canceled":
         subscription.status = Subscription.Status.CANCELLED
         subscription.save()
-        logger.info(
-            "Subscription #%s cancelled via payment %s",
-            subscription.id,
+    else:
+        logger.warning(
+            "Webhook: unexpected status '%s' for payment %s",
+            status,
             payment_id,
         )
 

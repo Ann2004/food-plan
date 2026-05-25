@@ -1,7 +1,10 @@
+import logging
 import random
 from datetime import date, timedelta
 
 from .models import DailyMenu, Recipe
+
+logger = logging.getLogger(__name__)
 
 
 def generate_daily_menu(subscription, target_date):
@@ -36,6 +39,12 @@ def generate_daily_menu(subscription, target_date):
             candidates = list(recipes)
 
         if not candidates:
+            logger.warning(
+                "No recipes for meal_type=%s, diet=%s, subscription #%s",
+                meal_type.code,
+                subscription.diet_type,
+                subscription.id,
+            )
             continue
 
         chosen = random.choice(candidates)
