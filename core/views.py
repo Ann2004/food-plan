@@ -122,7 +122,7 @@ def personal_account(request):
 
     subscriptions = (
         request.user.subscriptions.filter(
-            status__in=["active", "new", "paid"]
+            status__in=["active", "paid"]
         ).order_by("-start_date")
     )
 

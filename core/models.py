@@ -243,6 +243,11 @@ class Subscription(models.Model):
         default=Status.NEW,
         verbose_name="Статус",
     )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Дата создания",
+        null=True,
+    )
 
     class Meta:
         verbose_name = "Подписка"
