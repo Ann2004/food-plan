@@ -4,7 +4,7 @@
 {% block title %}{{ recipe.name }} | FoodPlan{% endblock %}
 
 {% block navbar_content %}
-<a href="{% url 'daily_menu' subscription.pk %}" class="btn btn-outline-success me-2 shadow-none foodplan_green foodplan__border_green" role="button">Назад</a>
+<a href="{% url 'daily_menu' subscription.user_number %}" class="btn btn-outline-success me-2 shadow-none foodplan_green foodplan__border_green" role="button">Назад</a>
 {% endblock %}
 
 {% block content %}

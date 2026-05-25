@@ -17,17 +17,12 @@ urlpatterns = (
         path("recipe/<int:pk>/", views.recipe_detail, name="recipe_detail"),
         path("order/", views.order, name="order"),
         path(
-            "subscription/<int:pk>/",
-            views.subscription_detail,
-            name="subscription_detail",
-        ),
-        path(
-            "subscription/<int:pk>/today/",
+            "subscription/<int:user_number>/menu/",
             views.daily_menu,
             name="daily_menu",
         ),
         path(
-            "subscription/<int:subscription_pk>/recipe/<int:daily_menu_pk>/",
+            "subscription/<int:user_number>/menu/<str:meal_type_code>/",
             views.daily_recipe_detail,
             name="daily_recipe_detail",
         ),

@@ -181,6 +181,9 @@ class Subscription(models.Model):
         related_name="subscriptions",
         verbose_name="Пользователь",
     )
+    user_number = models.PositiveSmallIntegerField(
+        verbose_name="Номер подписки",
+    )
     diet_type = models.CharField(
         max_length=20,
         choices=DietType.choices,
@@ -244,6 +247,12 @@ class Subscription(models.Model):
     class Meta:
         verbose_name = "Подписка"
         verbose_name_plural = "Подписки"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "user_number"],
+                name="unique_user_sub_number",
+            ),
+        ]
 
     def __str__(self):
         return f"{self.user.username} — {self.get_diet_type_display()}"

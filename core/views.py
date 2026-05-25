@@ -24,6 +24,7 @@ from yookassa import Configuration, Payment
 from .forms import LoginForm, ProfileForm, RegistrationForm, ReviewForm, SubscriptionForm
 from .models import Allergy, DailyMenu, MealType, Profile, Recipe, Subscription, SubscriptionPeriod, PromoCode, Review, calculate_price
 from .services import generate_daily_menu
+from django.db.models import Max
 
 logger = logging.getLogger(__name__)
 
@@ -161,10 +162,10 @@ def recipe_detail(request, pk):
 
 
 @login_required
-def daily_menu(request, pk):
+def daily_menu(request, user_number):
     subscription = get_object_or_404(
         Subscription,
-        pk=pk,
+        user_number=user_number,
         user=request.user,
         status=Subscription.Status.ACTIVE,
     )
@@ -206,18 +207,21 @@ def daily_menu(request, pk):
 
 
 @login_required
-def daily_recipe_detail(request, subscription_pk, daily_menu_pk):
+def daily_recipe_detail(request, user_number, meal_type_code):
     subscription = get_object_or_404(
         Subscription,
-        pk=subscription_pk,
+        user_number=user_number,
         user=request.user,
         status=Subscription.Status.ACTIVE,
     )
 
+    meal_type = get_object_or_404(MealType, code=meal_type_code)
+
     daily_menu = get_object_or_404(
         DailyMenu,
-        pk=daily_menu_pk,
         subscription=subscription,
+        date=date.today(),
+        meal_type=meal_type,
     )
 
     recipe = daily_menu.recipe
@@ -247,36 +251,6 @@ def daily_recipe_detail(request, subscription_pk, daily_menu_pk):
     return render(request, "daily_recipe_card.html", context)
 
 
-@login_required
-def subscription_detail(request, pk):
-
-    subscription = get_object_or_404(
-        Subscription.objects.prefetch_related("meals"),
-        pk=pk,
-        user=request.user,
-    )
-
-    if (
-        subscription.status == "active"
-        and subscription.end_date
-        and subscription.end_date < timezone.now().date()
-    ):
-        subscription.status = "expired"
-        subscription.save()
-
-    recipes = Recipe.objects.filter(suitable_for_diet=subscription.diet_type)
-
-    meal_recipes_list = [
-        (meal, recipes.filter(meal_type=meal))
-        for meal in subscription.meals.all()
-    ]
-
-    context = {
-        "subscription": subscription,
-        "meal_recipes_list": meal_recipes_list,
-    }
-
-    return render(request, "subscription.html", context)
 
 
 def order(request):
@@ -352,8 +326,12 @@ def order(request):
             day = min(start.day, calendar.monthrange(year, month)[1])
             end = date(year, month, day)
 
+            max_num = Subscription.objects.filter(user=request.user).aggregate(
+                Max("user_number")
+            )["user_number__max"] or 0
             subscription = Subscription.objects.create(
                 user=request.user,
+                user_number=max_num + 1,
                 diet_type=form.cleaned_data["diet_type"],
                 period=period,
                 persons_count=int(form.cleaned_data["persons_count"]),
@@ -470,7 +448,8 @@ def payment_success(request):
     if subscription.status == Subscription.Status.ACTIVE:
         if "current_subscription_id" in request.session:
             del request.session["current_subscription_id"]
-        return render(request, "payment-success.html", {"subscription": subscription})
+        messages.success(request, "Оплата прошла успешно! Подписка активирована.")
+        return redirect("lk")
 
     if subscription.payment_id:
         try:
@@ -487,9 +466,8 @@ def payment_success(request):
             subscription.save()
             if "current_subscription_id" in request.session:
                 del request.session["current_subscription_id"]
-            return render(
-                request, "payment-success.html", {"subscription": subscription}
-            )
+            messages.success(request, "Оплата прошла успешно! Подписка активирована.")
+            return redirect("lk")
 
     return redirect("payment-failure")
 

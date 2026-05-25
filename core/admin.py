@@ -76,6 +76,7 @@ class SubscriptionAdmin(admin.ModelAdmin):
     list_display = (
         "id",
         "user",
+        "user_number",
         "diet_type",
         "period",
         "persons_count",
@@ -91,7 +92,7 @@ class SubscriptionAdmin(admin.ModelAdmin):
     filter_horizontal = ("meals", "allergies")
     actions = ["refresh_daily_menu"]
     fieldsets = (
-        (None, {"fields": ("user", "status")}),
+        (None, {"fields": ("user", "user_number", "status")}),
         (
             "Параметры питания",
             {
