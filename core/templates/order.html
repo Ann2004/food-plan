@@ -206,11 +206,9 @@
 
         function calculatePrice() {
             var periodSelect = document.querySelector('select[name="period"]');
-            var personsSelect = document.querySelector('select[name="persons_count"]');
             var mealSelects = document.querySelectorAll('select[name="meals"]');
 
             var period = periodSelect ? periodSelect.value : '1';
-            var persons = personsSelect ? parseInt(personsSelect.value) : 1;
 
             var mealsTotal = 0;
             mealSelects.forEach(function (select) {
@@ -220,7 +218,7 @@
             });
 
             var multiplier = periodMultipliers[period] || 1.0;
-            var originalPrice = mealsTotal * multiplier * persons;
+            var originalPrice = mealsTotal * multiplier;
             var finalPrice = originalPrice;
 
             if (promoDiscount > 0) {
@@ -258,7 +256,7 @@
         }
 
         // Attach listeners
-        document.querySelectorAll('select[name="period"], select[name="persons_count"], select[name="meals"]').forEach(function (el) {
+        document.querySelectorAll('select[name="period"], select[name="meals"]').forEach(function (el) {
             el.addEventListener('change', updateDisplay);
         });
     });

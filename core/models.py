@@ -321,7 +321,7 @@ def calculate_price(persons_count, period, meal_type_ids, promo_code=None):
         )["total"]
         or 0
     )
-    price = meals_total * period.price_multiplier * persons_count
+    price = meals_total * period.price_multiplier
     if promo_code and promo_code.is_valid:
         price = price * (Decimal("1") - Decimal(promo_code.discount_percent) / Decimal("100"))
     return price
