@@ -41,6 +41,13 @@ class ProfileAdmin(admin.ModelAdmin):
     list_display = ("id", "user")
 
 
+@admin.register(RecipeIngredient)
+class RecipeIngredientAdmin(admin.ModelAdmin):
+    list_display = ("recipe", "ingredient", "quantity_grams")
+    search_fields = ("recipe__name", "ingredient__name")
+    autocomplete_fields = ("recipe", "ingredient")
+
+
 class RecipeIngredientInline(admin.TabularInline):
     model = RecipeIngredient
     extra = 1

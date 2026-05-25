@@ -156,7 +156,12 @@ class Profile(models.Model):
         upload_to="avatars/",
         blank=True,
         null=True,
+        verbose_name="Аватар",
     )
+
+    class Meta:
+        verbose_name = "Профиль"
+        verbose_name_plural = "Профили"
 
     def __str__(self):
         return self.user.email
